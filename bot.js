@@ -1,0 +1,98 @@
+//setup Discord Js
+const Discord = require('discord.js');
+const client = new Discord.Client(({intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'] }));
+const token = "OTcyMjU2OTE2NTA2MDI1OTg0.GE-Mng.MhdLh8NijFT3sGiV2JENLshQuH18FmpjGYbii4";
+const guild_id = "962884760038940702";
+const { Collection } = require('discord.js');
+const { url } = require('inspector');
+const fs = require('fs');
+const {REST} = require('@discordjs/rest');
+const {Routes} = require('discord-api-types/v9');
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commands = [];
+const config = require('./config.json')
+
+// Creating a collection for commands in client
+client.commands = new Collection();
+
+for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    commands.push(command.data.toJSON());
+    client.commands.set(command.data.name, command);
+}
+
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        if (error) console.error(error);
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    }
+});
+
+const { Webhook } = require('discord-webhook-node');
+
+const channel_2_hook = new Webhook(config.channel_2_url);
+
+const channel_1_id = config.channel_1_id;
+
+client.on('ready', () => {
+  console.log("Chat link is online")
+})
+
+client.on("message", async (message) => {
+    if(message.author.bot) return;
+    if(message.channel.type === "dm") return;
+
+    // Channel 1 -> Channel 2
+    if(message.channel.id == channel_1_id) {
+        if(message.content.length == 0) {
+            message.channel.send("There was an error sending your message.\nKeep in mind that attachments can't be bridged at this point.")
+            return;
+        } else {
+            channel_2_hook.setUsername(message.author.tag + " | Streamies");
+            channel_2_hook.setAvatar(message.author.displayAvatarURL());
+            channel_2_hook.send(message.content);
+        }
+    }
+})
+
+client.on('guildMemberAdd', member => {
+    member.roles.add(member.guild.roles.cache.find(i => i.name === 'movers'))
+    member.guild.channels.cache.get('962888183362764861').send("Welcome to the resistance, " + member.user.username + ". Glad you could join us.");
+});
+
+client.once('ready', () => {
+    console.log('The battle is now.');
+    // Registering the commands in the client
+    const CLIENT_ID = client.user.id;
+    const rest = new REST({
+        version: '9'
+    }).setToken(token);
+    (async () => {
+        try {
+            if (!guild_id) {
+                await rest.put(
+                    Routes.applicationCommands(CLIENT_ID), {
+                        body: commands
+                    },
+                );
+                console.log('Successfully registered application commands globally');
+            } else {
+                await rest.put(
+                    Routes.applicationGuildCommands(CLIENT_ID, guild_id), {
+                        body: commands
+                    },
+                );
+                console.log('Successfully registered application commands for development guild');
+            }
+        } catch (error) {
+            if (error) console.error(error);
+        }
+    })();
+});
+
+client.login(token);

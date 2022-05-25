@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@discordjs/builders": "^0.13.0",
+    "@discordjs/rest": "^0.4.1",
+    "aws-sdk": "^2.1130.0",
+    "discord-webhook-node": "^1.1.8",
+    "discord.js": "^13.6.0",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "image-to-base64": "^2.2.0",
+    "sun-tzu-quotes": "^1.0.0"
+  }
+}
