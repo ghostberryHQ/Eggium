@@ -1,13 +1,14 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const imageToBase64 = require('image-to-base64');
+const config = require('../config.json')
 var AWS = require('aws-sdk');
 
 //declare AWS region and keys
 AWS.config.update({
     region: 'us-east-1',
-    accessKeyId: 'AKIAVMAK7JKBVMXQS7AY',
-    secretAccessKey: '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'
+    accessKeyId: config.AWS_KEY,
+    secretAccessKey: config.AWS_SECRET_KEY
 });
 
 function getBinary(base64Image) {
