@@ -1,8 +1,9 @@
 //setup Discord Js
 const Discord = require('discord.js');
 const client = new Discord.Client(({intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'] }));
-const token = "OTcyMjU2OTE2NTA2MDI1OTg0.GE-Mng.MhdLh8NijFT3sGiV2JENLshQuH18FmpjGYbii4";
-const guild_id = "962884760038940702";
+const config = require('./config.json')
+const token = config.token;
+const guild_id = config.guild_id;
 const { Collection } = require('discord.js');
 const { url } = require('inspector');
 const fs = require('fs');
@@ -10,7 +11,6 @@ const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const commands = [];
-const config = require('./config.json')
 
 // Creating a collection for commands in client
 client.commands = new Collection();
