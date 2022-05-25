@@ -36,7 +36,7 @@ module.exports = {
                     //create embed
                     const embed = new MessageEmbed()
                         .setTitle('Screenshot')
-                        .setColor('#0099ff')
+                        .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                         .setImage(screenshot)
                         .setDescription('\nURL: ' + searchTerm + '\nDate Taken: ' + created_at)
                         embed.setFooter({

@@ -19,7 +19,7 @@ module.exports = {
 
         const embed = new MessageEmbed()
             .setTitle('Avatar - ' + username.user.username)
-            .setColor(0x00AE86)
+            .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             .setImage('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.jpeg')
             .setDescription('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.jpeg')
             embed.setFooter({

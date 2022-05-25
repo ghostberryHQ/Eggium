@@ -48,7 +48,7 @@ module.exports = {
 
                 const embed = new MessageEmbed()
                 .setTitle('UPDATE REQUEST')
-                .setColor('#0099ff')
+                .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                 .setImage("https://cdn.discordapp.com/avatars/972256916506025984/72ff17748793214ecf21e02e4d0dc4f0.png")
                 .setDescription(
                     "Current Version " + config.eggium_version +
