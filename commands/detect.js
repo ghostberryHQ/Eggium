@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const imageToBase64 = require('image-to-base64');
-const config = require('../config.json')
+const config = require('../config.json');
 var AWS = require('aws-sdk');
 
 //declare AWS region and keys

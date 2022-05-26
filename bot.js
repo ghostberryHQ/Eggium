@@ -20,8 +20,24 @@ for (const file of commandFiles) {
     commands.push(command.data.toJSON());
     client.commands.set(command.data.name, command);
 }
-
 client.on('interactionCreate', async interaction => {
+    if(interaction.isButton()) {
+        // if(interaction.customId === '0') {
+        //     interaction.reply({ content: 'you selected 0', ephemeral: true });
+        // }
+        // if(interaction.customId === '1') {
+        //     interaction.reply({ content: 'you selected 1', ephemeral: true });
+        // }
+        // if(interaction.customId === '2') {
+        //     interaction.reply({ content: 'you selected 2', ephemeral: true });
+        // }
+        // if(interaction.customId === '3') {
+        //     interaction.reply({ content: 'you selected 3', ephemeral: true });
+        // }
+        // if(interaction.customId === '4') {
+        //     interaction.reply({ content: 'you selected 4', ephemeral: true });
+        // }
+    }
     if (!interaction.isCommand()) return;
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
@@ -31,6 +47,7 @@ client.on('interactionCreate', async interaction => {
         if (error) console.error(error);
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
+
 });
 
 const { Webhook } = require('discord-webhook-node');
