@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { DataSync } = require('aws-sdk');
+const fs = require('fs');
 const { MessageEmbed, MessageActionRow, MessageButton, Message } = require('discord.js');
 const { IsThereAnyDealApi } = require('itad-api-client-ts');
 const config = require('../config.json');
@@ -16,65 +16,63 @@ module.exports = {
                 .setDescription('The game name you want to get deals for')
                 .setRequired(true)),
     async execute(interaction) {
-        //await interaction.reply('thinking...', { ephemeral: true });
         var game_name = interaction.options.getString('gamename');
-        var game_name_id = interaction.options.getString('gameid');
         const shops = await itadApi.getShops();
         var shopslist = [];
         for(var i = 0; i < shops.length; i++) {
             shopslist.push(shops[i].id);
         }
 
-        console.log(shopslist);
+        console.log("Available Shops" + shopslist);
 
         const matchingDeals = await itadApi.searchDeals(game_name, {
             shops: shopslist
         });
-        //var data = JSON.stringify(matchingDeals)
-        console.log(matchingDeals.list.length)
-        var games = [];
+        var gamesFound = [];
         for (var i = 0; i < matchingDeals.list.length; i++) {
             var title = matchingDeals.list[i].title;
-            if(games.includes(title)) {
+            if(gamesFound.includes(title)) {
                 console.log(title + " | already in array");
             } else { 
                 console.log(title)
-                games.push(title); 
+                gamesFound.push(title); 
             }
         }
 
-        var thing;
-        var allthings = [];
+        var buttons;
+        var allButtons = [];
+        var gamesavailableToSearch =[];
 
 
         if(matchingDeals.list.length == 0) {
-            thing = new MessageButton()
+            buttons = new MessageButton()
                         .setCustomId('0')
                         .setLabel("No Game Found")
                         .setStyle('DANGER')
                         .setDisabled(true);
-            allthings.push(thing);
+                    allButtons.push(buttons);
         } else {
-            for (var i = 0; i < games.length; i++) {
-                thing = new MessageButton()
+            for (var i = 0; i < gamesFound.length; i++) {
+                buttons = new MessageButton()
                         .setCustomId(String(i))
-                        .setLabel(games[i])
+                        .setLabel(gamesFound[i])
                         .setStyle('PRIMARY')
-                console.log("THING LABEL: "+thing.label)
+                console.log("BUTTON LABEL: "+buttons.label)
                 if(i > 4) {
                     console.log("not adding")
                 } else {
-                    if(thing.label.length > 79) {
+                    if(buttons.label.length > 79) {
                         console.log("ID: "+ i + " is too long")
                     } else {
-                        allthings.push(thing);
+                        allButtons.push(buttons);
+                        gamesavailableToSearch.push(buttons.label);
                     }
                 }
             }
         }
 
          var row = new MessageActionRow()
-             .addComponents(allthings);
+             .addComponents(allButtons);
     
         
         const embed = new MessageEmbed()
@@ -82,52 +80,52 @@ module.exports = {
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             //.setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')
             .setDescription(
-            'THIS COMMAND IS IN HEAVY BETA! PLEASE DO NOT RELY ON IT UNTIL IT IS FULLY TESTED!\nALOT OF INFORMATION WITH THE BUTTONS TURNS UP INCORRECT. THE COMMAND WAS TESTED WITH THE GAME "Unpacking"')
+            'This command is in beta. If you find any bug please report them.\nCurrently, This only scans official retailers and not sites like eneba and pckeys.')
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
             })
             .setTimestamp();
-        interaction.reply({ embeds: [embed], components: [row]});
+            interaction.reply({ embeds: [embed], components: [row], ephemeral: false});
 
         const collector = interaction.channel.createMessageComponentCollector({
             max: 1,
         });
 
         collector.on('end', (ButtonInteraction) => {
-            const deleteObj = (data, column, search) => {
-                let result = data.filter(m => m[column] !== search);
-              
-                return result;
-              }
             var buttonIdClicked = ButtonInteraction.first().customId;
-            console.log(buttonIdClicked + " | " + games[buttonIdClicked]);
-            console.log(games);
+            console.log(buttonIdClicked + " | " + gamesFound[buttonIdClicked]);
+            console.log(gamesavailableToSearch);
 
             var game;
             var gamesToRemove = [];
             for (var i = 0; i < matchingDeals.list.length; i++) {
-                game = games[i];
+                game = gamesFound[i];
 
-                if(game == games[buttonIdClicked]) {
-                    delete games[i]
+                if(game == gamesFound[buttonIdClicked]) {
+                    delete gamesFound[i]
                 } else {
-                    gamesToRemove.push(games[i])
+                    gamesToRemove.push(gamesFound[i])
                 }
             }
 
             console.log("games to remove: " + gamesToRemove);
             console.log(gamesToRemove.length)
 
-            console.log("0: " + JSON.stringify(matchingDeals.list[0]));
-
             const sd = matchingDeals.list;
-            console.log(sd)
+            //console.log(sd)
 
-            console.log("Unpacking")
-            console.log(gamesToRemove.toString())
+            try {
+                fs.writeFileSync('./unfiltered.json', JSON.stringify(sd));
+                // file written successfully
+              } catch (err) {
+                console.error(err);
+              }
+
+              console.log("SD LENGTH: " + sd.length);
             
             for (var i = 0; i < sd.length; i++) {
-                if(sd[i].title == gamesToRemove.toString()) {
+                console.log(sd[i].title)
+                if(gamesToRemove.includes(sd[i].title)) {
                     delete sd[i];
                 }
             }
@@ -137,8 +135,72 @@ module.exports = {
               });
               
             console.log("Filtered: ");
-            console.log(filtered);
+            var ids = [];
+            try {
+                fs.writeFileSync('./filtered.json', JSON.stringify(filtered));
+                // file written successfully
+              } catch (err) {
+                console.error(err);
+              }
 
+
+            // var xboxGamePassConsoleGames = []
+
+            // async function myfunction() {
+            //     return await fetch("https://catalog.gamepass.com/sigls/v2?id=f6f1f99f-9b49-4ccd-b3bf-4d9767a77f5e&language=en-us&market=US", { method: "Get" })
+            //         .then(res => res.json())
+            //         .then((json) => {
+            //         //console.log(text)
+            //           try {
+            //             console.log(json.length)
+            //           for (var i = 1; i < json.length; i++) {
+            //             ids.push(json[i].id);
+            //           }
+            //             console.log("success")
+            //           } catch (err) {
+            //             console.error(err);
+            //           }
+            //     }).then (() => {
+            //         for (var i = 0; i < ids.length; i++) {
+            //             // console.log(ids[i])
+        
+            //          return await fetch("https://displaycatalog.mp.microsoft.com/v7.0/products?bigIds="+ids[i]+"&market=US&languages=en-us&MS-CV=DGU1mcuYo0WMMp+F.1", { method: "Get" })
+            //             .then(res => res.json())
+            //             .then((json) => {
+            //                 //console.log(text)
+            //                 try {
+            //                     var titleOfCurrentXboxGamePassGame = json.Products[0].LocalizedProperties[0].ProductTitle
+            //                     console.log(titleOfCurrentXboxGamePassGame)
+            //                     xboxGamePassConsoleGames.push(titleOfCurrentXboxGamePassGame);
+            //                     //   fs.writeFileSync('gmpass.json', xboxGamePassConsoleGames);
+            //                 } catch (err) {
+            //                     console.error(err);
+            //                 }
+            //             });
+        
+            //         }
+            //     });
+            //   }
+              
+            // function start() {
+            //     return myfunction();
+            // }
+
+            // // Call start
+            // (async() => {
+            //     console.log('before start');
+  
+            //     await start();
+            //     console.log(ids)
+
+            //     console.log('roger roger')
+            //     console.log(xboxGamePassConsoleGames);
+
+
+
+
+
+            // })();
 
 
             if(filtered.length == 1) {
@@ -153,6 +215,7 @@ module.exports = {
                     '\nStore: ' + filtered[0].shop.name +
                     '\nPlatform: ' + filtered[0].drm +
                     '\nLink: ' + filtered[0].urls.buy
+                    //"\nIs This Game On Gamepass? " + "false"
                     )
                     embed.setFooter({
                         text: "Eggium - Tanner Approved"
@@ -165,7 +228,7 @@ module.exports = {
 
                 var prices = [];
                 for (var i = 0; i < filtered.length; i++) {
-                    console.log(filtered[i].price_new)
+                    //console.log(filtered[i].price_new)
                     prices.push(filtered[i].price_new);
                 }
 
@@ -181,7 +244,7 @@ module.exports = {
                     return el != null;
                 });
                 
-                console.log(filtered2);
+                //console.log(filtered2);
 
                 const embed = new MessageEmbed()
                     .setTitle('Game Deals - ' + filtered2[0].title)
@@ -193,7 +256,8 @@ module.exports = {
                     '\nBest Price Right Now: ' + filtered2[0].price_new +" (" + filtered2[0].price_cut + "% Price Cut)" +
                     '\nStore: ' + filtered2[0].shop.name +
                     '\nPlatform: ' + filtered2[0].drm +
-                    '\nLink: ' + filtered2[0].urls.buy
+                    '\nLink: ' + filtered2[0].urls.buy 
+                    //"\nIs This Game On Gamepass? " + "false"
                     )
                     embed.setFooter({
                         text: "Eggium - Tanner Approved"
