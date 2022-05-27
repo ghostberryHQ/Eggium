@@ -54,8 +54,12 @@ module.exports = {
                             .setTimestamp();
                             //send embed
                             interaction.reply({ embeds: [embed] , ephemeral: true});
+                        }).catch((reason) => {
+                            console.log(reason)
                         });
     
+                    }).catch((reason) => {
+                        console.log(reason)
                     });
             } else {
                 steam.resolve('https://steamcommunity.com/id/'+steamName).then(id => {
@@ -86,8 +90,14 @@ module.exports = {
                             .setTimestamp();
                             //send embed
                             interaction.reply({ embeds: [embed] , ephemeral: true});
+                        }).catch((reason) => {
+                            console.log(reason)
                         });
+                    }).catch((reason) => {
+                        console.log(reason)
                     });
+                }).catch((reason) => {
+                    console.log(reason)
                 });
             }
         }
