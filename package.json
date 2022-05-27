@@ -10,6 +10,7 @@
     "image-to-base64": "^2.2.0",
     "itad-api-client-ts": "^1.0.4",
     "node-fetch": "2.6.1",
+    "steamapi": "^2.2.0",
     "sun-tzu-quotes": "^1.0.0"
   }
 }
