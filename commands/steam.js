@@ -28,6 +28,7 @@ module.exports = {
                 return /^[0-9]+$/.test(str);
             }
             if(onlyNumbers(steamName)) {
+                //Input is a steam id
                     console.log("STEAM ID: "+ steamName)
                     steam.getUserRecentGames(steamName).then(games => {
                         var mostRecentlyPlayedGame = games[0]

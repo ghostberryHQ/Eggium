@@ -5,6 +5,7 @@ module.exports = {
         .setName('ping')
         .setDescription('Replies with pong'),
     async execute(interaction) {
-        interaction.reply({ content: 'Pong' , ephemeral: true});
+        const delay = Math.abs(Date.now() - interaction.createdTimestamp);
+        interaction.reply({ content: '🏓 Pong! ' + delay +'ms' , ephemeral: true});
     }
 };

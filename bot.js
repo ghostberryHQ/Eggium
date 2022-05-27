@@ -8,12 +8,12 @@ const config = require('./config.json')
 const token = config.token;
 const guild_id = config.guild_id;
 const { Collection } = require('discord.js');
-const { url } = require('inspector');
 const fs = require('fs');
 const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const commands = [];
+
 
 // Creating a collection for commands in client
 client.commands = new Collection();
@@ -42,6 +42,7 @@ client.on('interactionCreate', async interaction => {
         // }
     }
     if (!interaction.isCommand()) return;
+
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
     try {
