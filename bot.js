@@ -1,6 +1,9 @@
 //setup Discord Js
 const Discord = require('discord.js');
-const client = new Discord.Client(({intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'] }));
+const client = new Discord.Client(({
+    intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS', 'GUILD_MESSAGE_REACTIONS'],
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+}));
 const config = require('./config.json')
 const token = config.token;
 const guild_id = config.guild_id;
@@ -48,6 +51,31 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
 
+});
+
+client.on('messageReactionAdd', (reaction, user) => {
+    if (reaction.emoji.name === '⭐') {
+        const stars = reaction.count;
+        const userWhoSend = reaction.message.author;
+        console.log(userWhoSend);
+        console.log(userWhoSend.id);
+        console.log(userWhoSend.avatar);
+        if(stars === 5) {
+            //make an embed
+            const embed = new Discord.MessageEmbed()
+            .setTitle('⭐ Starboard Message ⭐')
+            .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
+            .setImage('https://cdn.discordapp.com/avatars/'+userWhoSend.id+'/'+userWhoSend.avatar+'.jpeg')
+            .setDescription(String(reaction.message.content))
+            embed.setFooter({
+                text: "Eggium - Tanner Approved"
+            });
+            client.channels.get(config.starboard_id).send(embed);
+        }
+        console.log('#' + stars + ' ⭐ reactions have been added');
+    } else {
+        console.log('a non-⭐ reaction has been added');
+    }
 });
 
 const { Webhook } = require('discord-webhook-node');
