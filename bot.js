@@ -66,11 +66,11 @@ client.on('messageReactionAdd', (reaction, user) => {
             .setTitle('⭐ Starboard Message ⭐')
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             .setThumbnail('https://cdn.discordapp.com/avatars/'+userWhoSend.id+'/'+userWhoSend.avatar+'.jpeg')
-            .setDescription(String(reaction.message.content))
+            .setDescription(String(reaction.message.content) + " -"+userWhoSend.username)
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
             });
-            client.channels.get(config.starboard_id).send(embed);
+            client.channels.cache.get(config.starboard_id).send({ embeds: [embed] });
         }
         console.log('#' + stars + ' ⭐ reactions have been added');
     } else {
@@ -107,7 +107,7 @@ client.on("message", async (message) => {
 
 client.on('guildMemberAdd', member => {
     member.roles.add(member.guild.roles.cache.find(i => i.name === 'movers'))
-    member.guild.channels.cache.get('962888183362764861').send("Welcome to the resistance, " + member.user.username + ". Glad you could join us.");
+    client.channels.cache.get('962888183362764861').send("Welcome to the resistance, " + member.user.username + ". Glad you could join us.");
 });
 
 client.once('ready', () => {
