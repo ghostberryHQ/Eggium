@@ -92,6 +92,24 @@ client.on("message", async (message) => {
     if(message.author.bot) return;
     if(message.channel.type === "dm") return;
 
+    console.log(message.content)
+
+    if(message.content.includes("http")) {
+
+        let initUrl = message.content
+        const matches = initUrl.match(/\bhttps?:\/\/\S+/gi);
+        var urlToShorten = matches[0];
+        let url = new URL(matches);
+
+        if(url.search == "") {
+            console.log("no need to shorten link")
+        } else {
+            var shortenedLink = urlToShorten.replace(url.search,"");
+            message.channel.send("I attempted to shorten your link. Here you go!\n"+shortenedLink);
+        }
+
+    }
+
     // Channel 1 -> Channel 2
     if(message.channel.id == channel_1_id) {
         if(message.content.length == 0) {
