@@ -5,3 +5,5 @@ yarn-error.log
 bot.new.js
 config.new.json
 testing.js
+filtered.json
+unfiltered.json

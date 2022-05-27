@@ -28,7 +28,7 @@ module.exports = {
                     const embed = new MessageEmbed()
                         .setTitle('Pokedex Entry - ' + data.id)
                         .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-                        .setImage(data.sprites.animated)
+                        .setThumbnail(data.sprites.animated)
                         .setDescription(
                             "Name: " + data.name +
                             "\nGeneration: " + data.generation +

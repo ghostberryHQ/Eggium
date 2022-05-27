@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const http = require('http');
 const https = require('https');
+const config = require('../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,10 +12,10 @@ module.exports = {
                 .setDescription('The site you would like Eggium to explore')
                 .setRequired(true)),
     async execute(interaction) {
-        interaction.reply('Adventuring...')
+        interaction.reply('Searching Mr. Tanners Brian...')
         var searchTerm = interaction.options.getString("site");
             //get screenshot api key
-            var apiKey = 'NXN4MNA-3P7461V-MXNM38J-GEPQK1P';
+            var apiKey = config.sitelookKey;
             //get screenshot url
             var url = 'https://shot.screenshotapi.net/screenshot?token=' + apiKey + '&url=' + searchTerm;
             //get screenshot response
