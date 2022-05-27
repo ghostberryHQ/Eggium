@@ -65,7 +65,7 @@ client.on('messageReactionAdd', (reaction, user) => {
             const embed = new Discord.MessageEmbed()
             .setTitle('⭐ Starboard Message ⭐')
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-            .setImage('https://cdn.discordapp.com/avatars/'+userWhoSend.id+'/'+userWhoSend.avatar+'.jpeg')
+            .setThumbnail('https://cdn.discordapp.com/avatars/'+userWhoSend.id+'/'+userWhoSend.avatar+'.jpeg')
             .setDescription(String(reaction.message.content))
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
@@ -111,7 +111,7 @@ client.on('guildMemberAdd', member => {
 });
 
 client.once('ready', () => {
-    console.log('The battle is now.');
+    console.log('The battle is now. Eggium Version: ' + config.eggium_version);
     // Registering the commands in the client
     const CLIENT_ID = client.user.id;
     const rest = new REST({
