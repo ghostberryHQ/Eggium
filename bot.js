@@ -201,7 +201,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
     newPresence.activities.forEach((activity) => {
         if (activity.type == 'PLAYING') {
-            console.log(activity.timestamps)
             if(activity.timestamps === null | activity.timestamps === undefined) {
                 console.log("No defined start time | " + activity.name)
             } else {

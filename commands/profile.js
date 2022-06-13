@@ -20,8 +20,15 @@ module.exports = {
     ),
   async execute(interaction) {
     if (interaction.options.getSubcommand() === "view") {
-      const user = interaction.options.getUser("profile");
-      console.log(user);
+      var user;
+      if(interaction.options.getUser("profile") === undefined || interaction.options.getUser("profile") === null) {
+        user = interaction.user;
+        console.log("penis1")
+      } else {
+        user = interaction.options.getUser("profile");
+        console.log("penis")
+      }
+      console.log(user)
       if (user) {
         //check if user is in user.json
         var userDatabasePRE = fs.readFileSync('./user.json','utf8');
@@ -32,6 +39,7 @@ module.exports = {
         var steamID;
         var steamName;
         var dateRegistered;
+        var achievementsAmount;
 
         for (var i = 0; i < count; i++) {
           var up = Object.keys(userDatabase.users)[i];
@@ -41,6 +49,7 @@ module.exports = {
             steamID = Database.steamID;
             steamName = Database.steamName;
             dateRegistered = Database.dateRegistered;
+            achievementsAmount = Object.keys(Database.achievements).length;
           }
         }
 
@@ -55,12 +64,10 @@ module.exports = {
             )
             //   .setThumbnail(mostRecentlyPlayedGame.iconURL)
             .setDescription(
-              "Steam ID: " +
-                steamID +
-                "\nSteam Name: " +
-                steamName +
-                "\nDate Registered: " +
-                dateRegistered
+              "Steam ID: " + steamID +
+              "\nSteam Name: " + steamName +
+              "\nDate Registered: " + dateRegistered +
+              "\nAchievements Obtained: " + achievementsAmount
             );
           embed
             .setFooter({
@@ -86,7 +93,6 @@ module.exports = {
         }
       }
     } else if (interaction.options.getSubcommand() === "create") {
-
         var user = interaction.user;
         if(user) {
           var userDatabasePRE = fs.readFileSync('./user.json','utf8');
