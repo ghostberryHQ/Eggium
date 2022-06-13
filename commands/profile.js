@@ -26,15 +26,17 @@ module.exports = {
         //check if user is in user.json
         var userDatabasePRE = fs.readFileSync('./user.json','utf8');
         var userDatabase = JSON.parse(userDatabasePRE);
-        console.log(userDatabase.users.length);
+        var count = Object.keys(userDatabase.users).length;
+        console.log(count);
         var userExists = false;
         var steamID;
         var steamName;
         var dateRegistered;
 
-        for (var i = 0; i < userDatabase.users.length; i++) {
-          const Database = userDatabase.users[i];
-          if (Database.discordID === user.id) {
+        for (var i = 0; i < count; i++) {
+          var up = Object.keys(userDatabase.users)[i];
+          const Database = userDatabase.users[up];
+          if (up === user.id) {
             userExists = true;
             steamID = Database.steamID;
             steamName = Database.steamName;
@@ -89,9 +91,10 @@ module.exports = {
         if(user) {
           var userDatabasePRE = fs.readFileSync('./user.json','utf8');
           var userDatabase = JSON.parse(userDatabasePRE);
-            for (var i = 0; i < userDatabase.users.length; i++) {
-                const Database = userDatabase.users[i];
-                if (Database.discordID === user.id) {
+          var count = Object.keys(userDatabase.users).length;
+            for (var i = 0; i < count; i++) {
+              var up = Object.keys(userDatabase.users)[i];
+                if (up === user.id) {
                   userExists = true;
                 }
             }

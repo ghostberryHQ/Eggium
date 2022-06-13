@@ -71,26 +71,18 @@ client.on('interactionCreate', async interaction => {
         }
         
         setTimeout(function () {
-            const userData = {
-                "discordID": interaction.user.id,
-                "discordUsername": interaction.user.username,
-                "steamID": finalSteamID,
-                "steamName": finalSteamName,
-                "dateRegistered": month + "/" + day + "/" + year
-            }
-    
-            console.log(userData);
-
             fs.readFile('user.json','utf8',function (err, data) {
                 if(err) console.log(err);
                 var test1 = JSON.parse(data);
-                test1.users.push(userData);
-                test1.users
-                var finalized = {
-                    "users": test1.users
-                };
-                fs.writeFileSync('user.json',JSON.stringify(finalized))
-                console.log(JSON.stringify(finalized))
+                test1.users[interaction.user.id] = {
+                    "discordUsername": interaction.user.username,
+                    "steamID": finalSteamID,
+                    "steamName": finalSteamName,
+                    "dateRegistered": month + "/" + day + "/" + year
+                }
+                //console.log(test1);
+                fs.writeFileSync('user.json',JSON.stringify(test1))
+                console.log(JSON.stringify(test1))
             });
             //users.users.push(userData)
         }, 500)
@@ -145,7 +137,10 @@ client.on("messageCreate", async (message) => {
     if(message.content.includes("http")) {
 
         let initUrl = message.content
+        
         const matches = initUrl.match(/\bhttps?:\/\/\S+/gi);
+        if(matches === null || matches === undefined) return;
+        console.log(matches)
         var urlToShorten = matches[0];
         let url = new URL(matches);
 
@@ -208,7 +203,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         if (activity.type == 'PLAYING') {
             console.log(activity.timestamps)
             if(activity.timestamps === null | activity.timestamps === undefined) {
-                console.log("No defined start time")
+                console.log("No defined start time | " + activity.name)
             } else {
                 var timePlaying = timeAgo.format(new Date(activity.timestamps.start), 'mini');
                 //console.log(quests.quests[activity.name])
@@ -228,7 +223,29 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                     console.log(checkerTimePlaying + " | " + checkerFufillment)
                                     if(checkerTimePlaying >= checkerFufillment) {
                                         console.log(`${newPresence.user.tag} met requirements for ${quests.quests[activity.name][i].Title}`)
-        
+                                        var userDatabasePRE = fs.readFileSync('./user.json','utf8');
+                                        var userDatabase = JSON.parse(userDatabasePRE);
+                                        var count = Object.keys(userDatabase.users).length;
+                                        for (let p = 0; p < count; p++) {
+                                            var up = Object.keys(userDatabase.users)[p];
+                                            if(up === newPresence.user.id) {
+                                                console.log(newPresence.user.username + " has an Eggium Profile & Has completed a quest! at: " + p)
+                                                var dateObj = new Date();
+                                                var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                                                var day = dateObj.getUTCDate();
+                                                var year = dateObj.getUTCFullYear();
+                                                var achievement = {
+                                                        "achievementName": quests.quests[activity.name][i].Title,
+                                                        "achievementDescription": quests.quests[activity.name][i].Description,
+                                                        "achievementDate": `${month}/${day}/${year}`
+                                                }
+                                                console.log(userDatabase.users[p].achievements)
+                                                console.log(achievement)
+                                            } else {
+                                                console.log(newPresence.user.username + " doesnt have an Eggium Profile at: " + p)
+                                            }
+                                            
+                                        }
                                     } else {
                                         console.log(`${newPresence.user.tag} did not meet requirements for ${quests.quests[activity.name][i].Title} | Looking for hours`)
                                     }
@@ -240,7 +257,38 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                     console.log(checkerTimePlaying + " | " + checkerFufillment)
                                     if(checkerTimePlaying >= checkerFufillment) {
                                         console.log(`${newPresence.user.tag} met requirements for ${quests.quests[activity.name][i].Title}`)
-        
+                                        var userDatabasePRE = fs.readFileSync('./user.json','utf8');
+                                        var userDatabase = JSON.parse(userDatabasePRE);
+                                        var count = Object.keys(userDatabase.users).length;
+                                        for (let p = 0; p < count; p++) {
+                                            var up = Object.keys(userDatabase.users)[p];
+                                            if(up === newPresence.user.id) {
+                                                console.log(newPresence.user.username + " has an Eggium Profile & Has completed a quest! at: " + p)
+                                                //console.log(userDatabase.users[up].achievements)
+                                                console.log(userDatabase.users[up].achievements.length)
+                                                if(userDatabase.users[up].achievements.some(e => e.achievementName === quests.quests[activity.name][i].Title)) {
+                                                    console.log(`${newPresence.user.tag} already has ${quests.quests[activity.name][i].Title}. They completed this quest on ${userDatabase.users[up].achievements[userDatabase.users[up].achievements.findIndex(e => e.achievementName === quests.quests[activity.name][i].Title)].achievementDate}`)
+                                                } else {
+                                                    var dateObj = new Date();
+                                                    var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                                                    var day = dateObj.getUTCDate();
+                                                    var year = dateObj.getUTCFullYear();
+                                                    var achievement = {
+                                                        "achievementName": quests.quests[activity.name][i].Title,
+                                                        "achievementDescription": quests.quests[activity.name][i].Description,
+                                                        "achievementDate": `${month}/${day}/${year}`
+                                                    }
+                                                    console.log(achievement)
+                                                    userDatabase.users[up].achievements.push(achievement)
+                                                    console.log(userDatabase.users[up].achievements)
+                                                    fs.writeFileSync('user.json',JSON.stringify(userDatabase))
+                                                    console.log(JSON.stringify(userDatabase))
+                                                }
+                                            } else {
+                                                console.log(newPresence.user.username + " doesnt have an Eggium Profile at: " + p)
+                                            }
+                                            
+                                        }
                                     } else {
                                         console.log(`${newPresence.user.tag} did not meet requirements for ${quests.quests[activity.name][i].Title} | Looking for minutes`)
                                     }
@@ -250,7 +298,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                     }
                 }
             }
-      } else if(activity.type == 'LISTENING') {
+      } else if(activity.type == 'LISTENING' || activity.name == "Apple Music") {
         if(activity.details == null) {
 
         } else {
