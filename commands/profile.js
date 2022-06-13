@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const { Collection, MessageActionRow, Modal, TextInputComponent } = require('discord.js');
+const fs = require('fs');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,12 +19,13 @@ module.exports = {
       subcommand.setName("create").setDescription("Create an Eggium Profile")
     ),
   async execute(interaction) {
-    const userDatabase = require("../user.json");
     if (interaction.options.getSubcommand() === "view") {
       const user = interaction.options.getUser("profile");
       console.log(user);
       if (user) {
         //check if user is in user.json
+        var userDatabasePRE = fs.readFileSync('./user.json','utf8');
+        var userDatabase = JSON.parse(userDatabasePRE);
         console.log(userDatabase.users.length);
         var userExists = false;
         var steamID;
@@ -85,6 +87,8 @@ module.exports = {
 
         var user = interaction.user;
         if(user) {
+          var userDatabasePRE = fs.readFileSync('./user.json','utf8');
+          var userDatabase = JSON.parse(userDatabasePRE);
             for (var i = 0; i < userDatabase.users.length; i++) {
                 const Database = userDatabase.users[i];
                 if (Database.discordID === user.id) {
@@ -109,17 +113,17 @@ module.exports = {
                 interaction.reply({ embeds: [embed], ephemeral: true });
               } else {
                 console.log("user not found");
-                    const modal = new Modal()
-                        .setCustomId('profileCreation')
-                        .setTitle('Eggium Profile Creation');
-                    const streamIdentifierInput = new TextInputComponent()
-                        .setCustomId('streamIdentifier')
-                        .setLabel("Please enter your Steam Identifier")
-                        .setStyle('SHORT');
-                    const firstActionRow = new MessageActionRow().addComponents(streamIdentifierInput);
-                    modal.addComponents(firstActionRow);
-                    await interaction.showModal(modal);
-              }
+                  const modal = new Modal()
+                      .setCustomId('profileCreation')
+                      .setTitle('Eggium Profile Creation');
+                  const steamIdentifierInput = new TextInputComponent()
+                      .setCustomId('steamIdentifier')
+                      .setLabel("Please enter your Steam Identifier")
+                      .setStyle('SHORT');
+                  const firstActionRow = new MessageActionRow().addComponents(steamIdentifierInput);
+                  modal.addComponents(firstActionRow);
+                  await interaction.showModal(modal);
+            }
         }
     }
   },

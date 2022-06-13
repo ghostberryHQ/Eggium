@@ -1,18 +1,28 @@
 //setup Discord Js
 const Discord = require('discord.js');
 const client = new Discord.Client(({
-    intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS', 'GUILD_MESSAGE_REACTIONS'],
+    intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS', 'GUILD_MESSAGE_REACTIONS', 'GUILD_PRESENCES', 'GUILD_VOICE_STATES'],
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
 }));
 const config = require('./config.json')
+const users = require('./user.json')
+const quests = require('./quests.json')
 const token = config.token;
 const guild_id = config.guild_id;
 const { Collection } = require('discord.js');
 const fs = require('fs');
 const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
+const songlink =  require('songlink-api');
+const SteamAPI = require('steamapi');
+const steam = new SteamAPI(config.steamAPIKey);
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const commands = [];
+
+const myApiKey = config.SONGLINK_API_KEY
+const getLinks = songlink.getClient({ apiKey: myApiKey });
+
+module.exports = client
 
 
 // Creating a collection for commands in client
@@ -24,25 +34,69 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 client.on('interactionCreate', async interaction => {
-    if(interaction.isButton()) {
-        // if(interaction.customId === '0') {
-        //     interaction.reply({ content: 'you selected 0', ephemeral: true });
-        // }
-        // if(interaction.customId === '1') {
-        //     interaction.reply({ content: 'you selected 1', ephemeral: true });
-        // }
-        // if(interaction.customId === '2') {
-        //     interaction.reply({ content: 'you selected 2', ephemeral: true });
-        // }
-        // if(interaction.customId === '3') {
-        //     interaction.reply({ content: 'you selected 3', ephemeral: true });
-        // }
-        // if(interaction.customId === '4') {
-        //     interaction.reply({ content: 'you selected 4', ephemeral: true });
-        // }
+    function onlyNumbers(str) {
+        return /^[0-9]+$/.test(str);
     }
-    if (!interaction.isCommand()) return;
 
+    if (interaction.isModalSubmit()) {
+        console.log()
+        // Get the data entered by the user
+        const steamIdentifier = interaction.fields.getTextInputValue('steamIdentifier');
+        console.log({ steamIdentifier });
+        console.log(users.users);
+        var dateObj = new Date();
+        var month = dateObj.getUTCMonth() + 1; //months from 1-12
+        var day = dateObj.getUTCDate();
+        var year = dateObj.getUTCFullYear();
+        var finalSteamID;
+        var finalSteamName;
+
+        if(onlyNumbers(steamIdentifier)) {
+            console.log("only numbers")
+            finalSteamID = steamIdentifier;
+            steam.getUserSummary(steamIdentifier).then(summary => {
+                console.log(summary);
+                beforeSteamName=summary.url;
+                finalSteamName = beforeSteamName.slice(30, -1);
+            }).catch((reason) => {
+                console.log(reason)
+            });
+        } else {
+            console.log("not")
+            steam.resolve('https://steamcommunity.com/id/'+steamIdentifier).then(id => {
+                console.log(id)
+                finalSteamID = id;
+                finalSteamName = steamIdentifier;
+            });
+        }
+        
+        setTimeout(function () {
+            const userData = {
+                "discordID": interaction.user.id,
+                "discordUsername": interaction.user.username,
+                "steamID": finalSteamID,
+                "steamName": finalSteamName,
+                "dateRegistered": month + "/" + day + "/" + year
+            }
+    
+            console.log(userData);
+
+            fs.readFile('user.json','utf8',function (err, data) {
+                if(err) console.log(err);
+                var test1 = JSON.parse(data);
+                test1.users.push(userData);
+                test1.users
+                var finalized = {
+                    "users": test1.users
+                };
+                fs.writeFileSync('user.json',JSON.stringify(finalized))
+                console.log(JSON.stringify(finalized))
+            });
+            //users.users.push(userData)
+        }, 500)
+    }
+
+    if (!interaction.isCommand()) return;
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
     try {
@@ -51,16 +105,15 @@ client.on('interactionCreate', async interaction => {
         if (error) console.error(error);
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
-
 });
 
 client.on('messageReactionAdd', (reaction, user) => {
     if (reaction.emoji.name === '⭐') {
         const stars = reaction.count;
         const userWhoSend = reaction.message.author;
-        console.log(userWhoSend);
-        console.log(userWhoSend.id);
-        console.log(userWhoSend.avatar);
+        //console.log(userWhoSend);
+        //console.log(userWhoSend.id);
+        //console.log(userWhoSend.avatar);
         if(stars === 5) {
             //make an embed
             const embed = new Discord.MessageEmbed()
@@ -79,21 +132,15 @@ client.on('messageReactionAdd', (reaction, user) => {
     }
 });
 
-const { Webhook } = require('discord-webhook-node');
-
-const channel_2_hook = new Webhook(config.channel_2_url);
-
-const channel_1_id = config.channel_1_id;
-
-client.on('ready', () => {
-  console.log("Chat link is online")
-})
-
-client.on("message", async (message) => {
+client.on("messageCreate", async (message) => {
     if(message.author.bot) return;
     if(message.channel.type === "dm") return;
 
-    console.log(message.content)
+    //console.log(message.content)
+
+    if(message.content.includes("morb")) {
+        message.channel.send("Its morbin' time!\nhttps://cdn.discordapp.com/attachments/848538050233237594/977839127682744330/full-1.webm");
+    }
 
     if(message.content.includes("http")) {
 
@@ -102,31 +149,115 @@ client.on("message", async (message) => {
         var urlToShorten = matches[0];
         let url = new URL(matches);
 
-        if(url.search == "") {
-            console.log("no need to shorten link")
+        if(urlToShorten.includes("spotify.com") && urlToShorten.includes("track")) {
+                console.log("Spotify link detected")
+                getLinks({ url: urlToShorten })
+                .then(response => {
+                    Object.entries(response.linksByPlatform)
+                message.channel.send("Your Spotify link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+            })
+        } else if(urlToShorten.includes("music.apple.com") && urlToShorten.includes("album")) {
+                console.log("Apple Music link detected")
+                getLinks({ url: urlToShorten })
+                .then(response => {
+                    Object.entries(response.linksByPlatform)
+                message.channel.send("Your Apple Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+            })
+        } else if(urlToShorten.includes("music.amazon.com") && urlToShorten.includes("albums")) {
+                console.log("Amazon Music link detected")
+                getLinks({ url: urlToShorten })
+                .then(response => {
+                    Object.entries(response.linksByPlatform)
+                message.channel.send("Your Amazon Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+            })
+        } else if(urlToShorten.includes("music.youtube.com") && urlToShorten.includes("watch")) {
+                console.log("Youtube Music link detected")
+                getLinks({ url: urlToShorten })
+                .then(response => {
+                    Object.entries(response.linksByPlatform)
+                message.channel.send("Your Youtube Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+            })
         } else {
-            var shortenedLink = urlToShorten.replace(url.search,"");
-            message.channel.send("I attempted to shorten your link. Here you go!\n"+shortenedLink);
+            if(url.search == "") {
+                console.log("no need to shorten link")
+            } else {
+                var shortenedLink = urlToShorten.replace(url.search,"");
+                message.channel.send("I attempted to shorten your link. Here you go!\n"+shortenedLink);
+            }
         }
 
-    }
-
-    // Channel 1 -> Channel 2
-    if(message.channel.id == channel_1_id) {
-        if(message.content.length == 0) {
-            message.channel.send("There was an error sending your message.\nKeep in mind that attachments can't be bridged at this point.")
-            return;
-        } else {
-            channel_2_hook.setUsername(message.author.tag + " | Streamies");
-            channel_2_hook.setAvatar(message.author.displayAvatarURL());
-            channel_2_hook.send(message.content);
-        }
     }
 })
 
 client.on('guildMemberAdd', member => {
     member.roles.add(member.guild.roles.cache.find(i => i.name === 'movers'))
     client.channels.cache.get('962888183362764861').send("Welcome to the resistance, " + member.user.username + ". Glad you could join us.");
+});
+
+const TimeAgo =  require('javascript-time-ago');
+const en =  require('javascript-time-ago/locale/en');
+const { builtinModules } = require('module');
+
+TimeAgo.addDefaultLocale(en)
+
+const timeAgo = new TimeAgo('en-US')
+
+client.on('presenceUpdate', (oldPresence, newPresence) => {
+    if (!newPresence.activities) return false;
+    newPresence.activities.forEach((activity) => {
+        if (activity.type == 'PLAYING') {
+            console.log(activity.timestamps)
+            if(activity.timestamps === null | activity.timestamps === undefined) {
+                console.log("No defined start time")
+            } else {
+                var timePlaying = timeAgo.format(new Date(activity.timestamps.start), 'mini');
+                //console.log(quests.quests[activity.name])
+                console.log(`${newPresence.user.tag} is ${activity.type} ${activity.name}. They've playing for ${timePlaying}`);
+                if(quests.quests[activity.name] === undefined || quests.quests[activity.name] === null) {
+                    console.log("No quest found for this activity")
+                } else {
+                    for (let i = 0; i < quests.quests[activity.name].length; i++) {
+                        if(quests.quests[activity.name][i].RequirementType == 'time') {
+                            if(timePlaying.includes("mo")) {
+                                console.log("We suspect cheating.")
+                            } else {
+                                //if has been playing for hours AND the quest requires hours
+                                if(timePlaying.includes("h") && quests.quests[activity.name][i].fufillment.includes("h")) {
+                                    var checkerTimePlaying = parseInt(timePlaying.slice(0,-1));
+                                    var checkerFufillment = parseInt((quests.quests[activity.name][i].fufillment).slice(0,-1));
+                                    console.log(checkerTimePlaying + " | " + checkerFufillment)
+                                    if(checkerTimePlaying >= checkerFufillment) {
+                                        console.log(`${newPresence.user.tag} met requirements for ${quests.quests[activity.name][i].Title}`)
+        
+                                    } else {
+                                        console.log(`${newPresence.user.tag} did not meet requirements for ${quests.quests[activity.name][i].Title} | Looking for hours`)
+                                    }
+                                }
+                                //if has been playing for hours AND the quest requires hours
+                                if(timePlaying.includes("m") && quests.quests[activity.name][i].fufillment.includes("m")) {
+                                    var checkerTimePlaying = parseInt(timePlaying.slice(0,-1));
+                                    var checkerFufillment = parseInt((quests.quests[activity.name][i].fufillment).slice(0,-1));
+                                    console.log(checkerTimePlaying + " | " + checkerFufillment)
+                                    if(checkerTimePlaying >= checkerFufillment) {
+                                        console.log(`${newPresence.user.tag} met requirements for ${quests.quests[activity.name][i].Title}`)
+        
+                                    } else {
+                                        console.log(`${newPresence.user.tag} did not meet requirements for ${quests.quests[activity.name][i].Title} | Looking for minutes`)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+      } else if(activity.type == 'LISTENING') {
+        if(activity.details == null) {
+
+        } else {
+            console.log(`${newPresence.user.tag} is ${activity.type} to ${activity.details}.`);
+        }
+      }
+    });
 });
 
 client.once('ready', () => {

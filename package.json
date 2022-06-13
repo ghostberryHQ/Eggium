@@ -1,15 +1,18 @@
 {
   "dependencies": {
-    "@discordjs/builders": "^0.13.0",
+    "@discordjs/builders": "^0.15.0",
     "@discordjs/rest": "^0.4.1",
     "aws-sdk": "^2.1130.0",
-    "discord-webhook-node": "^1.1.8",
-    "discord.js": "^13.6.0",
+    "discord-command-cooldown": "^1.0.8",
+    "discord-economy-super": "^1.5.2",
+    "discord.js": "^13.8.0",
     "http": "^0.0.1-security",
     "https": "^1.0.0",
     "image-to-base64": "^2.2.0",
     "itad-api-client-ts": "^1.0.4",
+    "javascript-time-ago": "^2.5.4",
     "node-fetch": "2.6.1",
+    "songlink-api": "^1.0.0",
     "steamapi": "^2.2.0",
     "sun-tzu-quotes": "^1.0.0"
   }
