@@ -1,0 +1,75 @@
+{
+  "quests": {
+    "Visual Studio Code": [
+      {
+        "Title": "Thats nothing",
+        "Description": "Code for 5 hours straight",
+        "RequirementType": "time",
+        "fufillment": "5h",
+        "reward": "6 TannerCoin"
+      },
+      {
+        "Title": "All Nighter",
+        "Description": "Code for 12 hours straight",
+        "RequirementType": "time",
+        "fufillment": "12h",
+        "reward": "8 TannerCoin"
+      },
+      {
+        "Title": "All In a Days Work",
+        "Description": "Code for 24 hours straight",
+        "RequirementType": "time",
+        "fufillment": "24h",
+        "reward": "8 TannerCoin"
+      }
+    ],
+    "Code": [
+      {
+        "Title": "Thats nothing",
+        "Description": "Code for 5 hours straight",
+        "RequirementType": "time",
+        "fufillment": "5h",
+        "reward": "6 TannerCoin"
+      },
+      {
+        "Title": "All Nighter",
+        "Description": "Code for 12 hours straight",
+        "RequirementType": "time",
+        "fufillment": "12h",
+        "reward": "8 TannerCoin"
+      },
+      {
+        "Title": "All In a Days Work",
+        "Description": "Code for 24 hours straight",
+        "RequirementType": "time",
+        "fufillment": "24h",
+        "reward": "8 TannerCoin"
+      }
+    ],
+    "Minecraft": [
+      {
+        "Title": "Survive The Night",
+        "Description": "Play Minecraft for 20 Minutes",
+        "RequirementType": "time",
+        "fufillment": "20m",
+        "reward": "6 TannerCoin"
+      }
+    ],
+    "League of Legends": [
+      {
+        "Title": "Defy the Gods",
+        "Description": "Play League for 3 hours straight",
+        "RequirementType": "time",
+        "fufillment": "3h",
+        "reward": "6 TannerCoin"
+      },
+      {
+        "Title": "No Women",
+        "Description": "Play League for 24 hours straight",
+        "RequirementType": "time",
+        "fufillment": "24h",
+        "reward": "6 TannerCoin"
+      }
+    ]
+  }
+}

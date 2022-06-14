@@ -186,6 +186,7 @@ client.on("messageCreate", async (message) => {
 
 client.on('guildMemberAdd', member => {
     member.roles.add(member.guild.roles.cache.find(i => i.name === 'movers'))
+    console.log(member)
     client.channels.cache.get('962888183362764861').send("Welcome to the resistance, " + member.user.username + ". Glad you could join us.");
 });
 
@@ -240,6 +241,16 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                 }
                                                 console.log(userDatabase.users[p].achievements)
                                                 console.log(achievement)
+                                                //SEND USER DM
+                                                console.log(newPresence.userId)
+                                                client.users.fetch(newPresence.userId).then(user => {
+                                                    user.send(`You have completed the quest: ${quests.quests[activity.name][i].Title}`)
+                                                });
+                                                userDatabase.users[up].achievements.push(achievement)
+                                                console.log(userDatabase.users[up].achievements)
+                                                fs.writeFileSync('user.json',JSON.stringify(userDatabase))
+                                                console.log(JSON.stringify(userDatabase))
+                                                // newPresence.guild.members.cache.get
                                             } else {
                                                 console.log(newPresence.user.username + " doesnt have an Eggium Profile at: " + p)
                                             }
@@ -278,6 +289,10 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                         "achievementDate": `${month}/${day}/${year}`
                                                     }
                                                     console.log(achievement)
+                                                    console.log(newPresence.userId)
+                                                    client.users.fetch(newPresence.userId).then(user => {
+                                                        user.send(`You have completed the quest: ${quests.quests[activity.name][i].Title}`)
+                                                    });
                                                     userDatabase.users[up].achievements.push(achievement)
                                                     console.log(userDatabase.users[up].achievements)
                                                     fs.writeFileSync('user.json',JSON.stringify(userDatabase))
