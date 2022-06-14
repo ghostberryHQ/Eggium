@@ -23,10 +23,8 @@ module.exports = {
       var user;
       if(interaction.options.getUser("profile") === undefined || interaction.options.getUser("profile") === null) {
         user = interaction.user;
-        console.log("penis1")
       } else {
         user = interaction.options.getUser("profile");
-        console.log("penis")
       }
       console.log(user)
       if (user) {
