@@ -38,6 +38,7 @@ module.exports = {
         var steamName;
         var dateRegistered;
         var achievementsAmount;
+        var mostListenedToSong;
 
         for (var i = 0; i < count; i++) {
           var up = Object.keys(userDatabase.users)[i];
@@ -48,6 +49,13 @@ module.exports = {
             steamName = Database.steamName;
             dateRegistered = Database.dateRegistered;
             achievementsAmount = Object.keys(Database.achievements).length;
+
+            if(Object.keys(Database.listeningHistory).length === 0) {
+              mostListenedToSong = "No songs have been listened to yet.";
+            } else {
+              let sortedInput = Database.listeningHistory.slice(1).sort((a, b) => b.timesPlayed - a.timesPlayed);
+              mostListenedToSong = `${sortedInput[0].songName} by ${sortedInput[0].artist}`;
+            }
           }
         }
 
@@ -65,7 +73,8 @@ module.exports = {
               "Steam ID: " + steamID +
               "\nSteam Name: " + steamName +
               "\nDate Registered: " + dateRegistered +
-              "\nAchievements Obtained: " + achievementsAmount
+              "\nAchievements Obtained: " + achievementsAmount +
+              "\nMost Listened To Song: " + mostListenedToSong
             );
           embed
             .setFooter({
