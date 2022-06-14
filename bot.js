@@ -362,7 +362,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
             } else {
                 var hasUserListenedToSongBefore = userDatabase.users[newPresence.user.id].listeningHistory.some(item => item.songName === songname && item.artist === songartist);
                 console.log(`${hasUserListenedToSongBefore} | ${newPresence.user.tag} is LISTENING to ${songname} by ${songartist}.`);
-                console.log(songInfo)
                 if(hasUserListenedToSongBefore === true) {
 
                     if(userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo === songname) {
@@ -388,7 +387,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                     userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
                     fs.writeFileSync('user.json',JSON.stringify(userDatabase))
                 }
-                console.log(userDatabase.users[newPresence.user.id].listeningHistory)
             }
         }
       }
