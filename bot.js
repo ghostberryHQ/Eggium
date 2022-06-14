@@ -78,7 +78,9 @@ client.on('interactionCreate', async interaction => {
                     "discordUsername": interaction.user.username,
                     "steamID": finalSteamID,
                     "steamName": finalSteamName,
-                    "dateRegistered": month + "/" + day + "/" + year
+                    "dateRegistered": month + "/" + day + "/" + year,
+                    "achievements": [],
+                    "listeningHistory": []
                 }
                 //console.log(test1);
                 fs.writeFileSync('user.json',JSON.stringify(test1))
@@ -201,7 +203,8 @@ const timeAgo = new TimeAgo('en-US')
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
     newPresence.activities.forEach((activity) => {
-        if (activity.type == 'PLAYING') {
+        //EXPERIMENTAL
+        if (activity.type == 'PLAYING' && activity.name != "Apple Music" && activity.name != "Cider") {
             if(activity.timestamps === null | activity.timestamps === undefined) {
                 console.log("No defined start time | " + activity.name)
             } else {
@@ -339,7 +342,54 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         if(activity.details == null) {
 
         } else {
-            console.log(`${newPresence.user.tag} is ${activity.type} to ${activity.details}.`);
+            var songartist;
+            var songname;
+            var songInfo;
+            if(activity.name == "Apple Music" || activity.name == "Cider") {
+                songname = activity.details;
+                songartist = activity.state.slice(3);
+                songInfo = {"songName": songname, "artist": songartist, "timesPlayed": 1}
+            } else {
+                songname = activity.details;
+                songartist = activity.state;
+                songInfo = {"songName": songname, "artist": songartist, "timesPlayed": 1}
+            }
+
+            var userDatabasePRE = fs.readFileSync('./user.json','utf8');
+            var userDatabase = JSON.parse(userDatabasePRE);
+            if(userDatabase.users[newPresence.user.id] === undefined || userDatabase.users[newPresence.user.id] === null) {
+                console.log(`${newPresence.user.tag} is listening to ${songname} by ${songartist} but has no Eggium Profile. They should opt in!`)
+            } else {
+                var hasUserListenedToSongBefore = userDatabase.users[newPresence.user.id].listeningHistory.some(item => item.songName === songname && item.artist === songartist);
+                console.log(`${hasUserListenedToSongBefore} | ${newPresence.user.tag} is LISTENING to ${songname} by ${songartist}.`);
+                console.log(songInfo)
+                if(hasUserListenedToSongBefore === true) {
+
+                    if(userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo === songname) {
+                        console.log("This is a presnse update. Likely not a new song.")
+                    } else {
+                        var timesAlreadyPlayed = userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed
+                        userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed = parseInt(timesAlreadyPlayed) + 1;
+                        userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
+                        userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
+                        userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
+                        fs.writeFileSync('user.json',JSON.stringify(userDatabase))
+                    }
+    
+                    //append to times played
+                    //add to last played song
+    
+                } else if(hasUserListenedToSongBefore === false) {
+                    //add to listening history
+                    //add to last played song
+                    userDatabase.users[newPresence.user.id].listeningHistory.push(songInfo)
+                    userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
+                    userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
+                    userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
+                    fs.writeFileSync('user.json',JSON.stringify(userDatabase))
+                }
+                console.log(userDatabase.users[newPresence.user.id].listeningHistory)
+            }
         }
       }
     });
