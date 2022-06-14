@@ -9,7 +9,7 @@ const users = require('./user.json')
 const quests = require('./quests.json')
 const token = config.token;
 const guild_id = config.guild_id;
-const { Collection } = require('discord.js');
+const { Collection, MessageEmbed } = require('discord.js');
 const fs = require('fs');
 const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
@@ -230,27 +230,40 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                             var up = Object.keys(userDatabase.users)[p];
                                             if(up === newPresence.user.id) {
                                                 console.log(newPresence.user.username + " has an Eggium Profile & Has completed a quest! at: " + p)
-                                                var dateObj = new Date();
-                                                var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                                                var day = dateObj.getUTCDate();
-                                                var year = dateObj.getUTCFullYear();
-                                                var achievement = {
+                                                //console.log(userDatabase.users[up].achievements)
+                                                console.log(userDatabase.users[up].achievements.length)
+                                                if(userDatabase.users[up].achievements.some(e => e.achievementName === quests.quests[activity.name][i].Title)) {
+                                                    console.log(`${newPresence.user.tag} already has ${quests.quests[activity.name][i].Title}. They completed this quest on ${userDatabase.users[up].achievements[userDatabase.users[up].achievements.findIndex(e => e.achievementName === quests.quests[activity.name][i].Title)].achievementDate}`)
+                                                } else {
+                                                    var dateObj = new Date();
+                                                    var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                                                    var day = dateObj.getUTCDate();
+                                                    var year = dateObj.getUTCFullYear();
+                                                    var achievement = {
                                                         "achievementName": quests.quests[activity.name][i].Title,
                                                         "achievementDescription": quests.quests[activity.name][i].Description,
                                                         "achievementDate": `${month}/${day}/${year}`
+                                                    }
+                                                    console.log(achievement)
+                                                    console.log(newPresence.userId)
+                                                    client.users.fetch(newPresence.userId).then(user => {
+                                                        const embed = new MessageEmbed()
+                                                        .setTitle("Eggium Achievements - " + activity.name)
+                                                        .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                                                        //   .setThumbnail(mostRecentlyPlayedGame.iconURL)
+                                                        .setDescription(`You have completed the quest: ${quests.quests[activity.name][i].Title}`);
+                                                      embed
+                                                        .setFooter({
+                                                          text: "Eggium - Tanner Approved",
+                                                        })
+                                                        .setTimestamp();
+                                                        user.send({ embeds: [embed]})
+                                                    });
+                                                    userDatabase.users[up].achievements.push(achievement)
+                                                    console.log(userDatabase.users[up].achievements)
+                                                    fs.writeFileSync('user.json',JSON.stringify(userDatabase))
+                                                    console.log(JSON.stringify(userDatabase))
                                                 }
-                                                console.log(userDatabase.users[p].achievements)
-                                                console.log(achievement)
-                                                //SEND USER DM
-                                                console.log(newPresence.userId)
-                                                client.users.fetch(newPresence.userId).then(user => {
-                                                    user.send(`You have completed the quest: ${quests.quests[activity.name][i].Title}`)
-                                                });
-                                                userDatabase.users[up].achievements.push(achievement)
-                                                console.log(userDatabase.users[up].achievements)
-                                                fs.writeFileSync('user.json',JSON.stringify(userDatabase))
-                                                console.log(JSON.stringify(userDatabase))
-                                                // newPresence.guild.members.cache.get
                                             } else {
                                                 console.log(newPresence.user.username + " doesnt have an Eggium Profile at: " + p)
                                             }
@@ -291,7 +304,17 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                     console.log(achievement)
                                                     console.log(newPresence.userId)
                                                     client.users.fetch(newPresence.userId).then(user => {
-                                                        user.send(`You have completed the quest: ${quests.quests[activity.name][i].Title}`)
+                                                        const embed = new MessageEmbed()
+                                                        .setTitle("Eggium Achievements - " + activity.name)
+                                                        .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                                                        //   .setThumbnail(mostRecentlyPlayedGame.iconURL)
+                                                        .setDescription(`You have completed the quest: ${quests.quests[activity.name][i].Title}`);
+                                                      embed
+                                                        .setFooter({
+                                                          text: "Eggium - Tanner Approved",
+                                                        })
+                                                        .setTimestamp();
+                                                        user.send({ embeds: [embed]})
                                                     });
                                                     userDatabase.users[up].achievements.push(achievement)
                                                     console.log(userDatabase.users[up].achievements)
