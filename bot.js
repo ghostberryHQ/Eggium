@@ -367,11 +367,11 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                     if(userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo === songname) {
                         console.log("This is a presnse update. Likely not a new song.")
                     } else {
-                        var timesAlreadyPlayed = userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed
-                        userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed = parseInt(timesAlreadyPlayed) + 1;
                         userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
                         userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
                         userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
+                        var timesAlreadyPlayed = userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed
+                        userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed = parseInt(timesAlreadyPlayed) + 1;
                         fs.writeFileSync('user.json',JSON.stringify(userDatabase))
                     }
     
@@ -381,10 +381,19 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                 } else if(hasUserListenedToSongBefore === false) {
                     //add to listening history
                     //add to last played song
+                    if(userDatabase.users[newPresence.user.id].listeningHistory[0] === undefined) {
+                        const makeLatestListen = {
+                            lastSongListenedTo: songname,
+                            artist: songartist,
+                            dateListened: activity.timestamps.start
+                        }
+                        userDatabase.users[newPresence.user.id].listeningHistory.push(makeLatestListen)
+                    } else {
+                        userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
+                        userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
+                        userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
+                    }
                     userDatabase.users[newPresence.user.id].listeningHistory.push(songInfo)
-                    userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
-                    userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
-                    userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
                     fs.writeFileSync('user.json',JSON.stringify(userDatabase))
                 }
             }

@@ -1,4 +1,5 @@
 node_modules/
+Eggium Viewer/
 config.json
 yarn.lock
 yarn-error.log
