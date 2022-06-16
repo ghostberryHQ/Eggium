@@ -48,7 +48,6 @@ client.on('interactionCreate', async interaction => {
         // Get the data entered by the user
         const steamIdentifier = interaction.fields.getTextInputValue('steamIdentifier');
         console.log({ steamIdentifier });
-        console.log(users.users);
         var dateObj = new Date();
         var month = dateObj.getUTCMonth() + 1; //months from 1-12
         var day = dateObj.getUTCDate();
@@ -199,6 +198,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     newPresence.activities.forEach((activity) => {
         //EXPERIMENTAL
     if (activity.type == 'PLAYING' && activity.name != "Apple Music" && activity.name != "Cider") {
+        if(newPresence.user.bot) return;
         if(activity.timestamps === null | activity.timestamps === undefined) {
             console.log("No defined start time | " + activity.name)
         } else {
@@ -309,6 +309,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
             });
         }
     } else if(activity.type == 'LISTENING' || activity.name == "Apple Music") {
+        if(newPresence.user.bot) return;
         //Checks if you are listening to Music
         if(activity.details == null) {} 
         else {
@@ -374,7 +375,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                             //Now it checks again to see if the song is in the database
                                             con.query('SELECT * FROM Songs WHERE songName = "'+songname+'" AND songArtist = "'+songartist+'";', function (err, result, fields) {
                                                 //Chances are. It 100% will be now. So it adds it to your Listening History
-                                                var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(new Date())+'");'
+                                                var datetimePre = new Date();
+                                                var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetimePre.toISOString().slice(0, 19).replace('T', ' '))+'");'
                                                 con.query(sql, function (err, result) {
                                                 if (err) throw err;
                                                 //added!
