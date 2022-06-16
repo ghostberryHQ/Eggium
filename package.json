@@ -11,6 +11,7 @@
     "image-to-base64": "^2.2.0",
     "itad-api-client-ts": "^1.0.4",
     "javascript-time-ago": "^2.5.4",
+    "mysql": "^2.18.1",
     "node-fetch": "2.6.1",
     "songlink-api": "^1.0.0",
     "steamapi": "^2.2.0",

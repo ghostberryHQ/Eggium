@@ -5,8 +5,6 @@ const client = new Discord.Client(({
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
 }));
 const config = require('./config.json')
-const users = require('./user.json')
-const quests = require('./quests.json')
 const token = config.token;
 const guild_id = config.guild_id;
 const { Collection, MessageEmbed } = require('discord.js');
@@ -18,11 +16,18 @@ const SteamAPI = require('steamapi');
 const steam = new SteamAPI(config.steamAPIKey);
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const commands = [];
+var mysql = require('mysql');
+var con = mysql.createConnection({
+    host: config.AWS_RDS_ENDPOINT,
+    user: config.AWS_RDS_USERNAME,
+    password: config.AWS_RDS_PASSWORD,
+    database: config.AWS_RDS_DB_NAME
+  });
 
 const myApiKey = config.SONGLINK_API_KEY
 const getLinks = songlink.getClient({ apiKey: myApiKey });
 
-module.exports = client
+exports.con = con;
 
 
 // Creating a collection for commands in client
@@ -71,22 +76,11 @@ client.on('interactionCreate', async interaction => {
         }
         
         setTimeout(function () {
-            fs.readFile('user.json','utf8',function (err, data) {
-                if(err) console.log(err);
-                var test1 = JSON.parse(data);
-                test1.users[interaction.user.id] = {
-                    "discordUsername": interaction.user.username,
-                    "steamID": finalSteamID,
-                    "steamName": finalSteamName,
-                    "dateRegistered": month + "/" + day + "/" + year,
-                    "achievements": [],
-                    "listeningHistory": []
-                }
-                //console.log(test1);
-                fs.writeFileSync('user.json',JSON.stringify(test1))
-                console.log(JSON.stringify(test1))
-            });
-            //users.users.push(userData)
+                var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
+                con.query(sql, function (err, result) {
+                  if (err) throw err;
+                  console.log(`1 record inserted for ${interaction.user.username}`);
+                });
         }, 500)
     }
 
@@ -204,199 +198,210 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
     newPresence.activities.forEach((activity) => {
         //EXPERIMENTAL
-        if (activity.type == 'PLAYING' && activity.name != "Apple Music" && activity.name != "Cider") {
-            if(activity.timestamps === null | activity.timestamps === undefined) {
-                console.log("No defined start time | " + activity.name)
-            } else {
-                var timePlaying = timeAgo.format(new Date(activity.timestamps.start), 'mini');
-                //console.log(quests.quests[activity.name])
-                console.log(`${newPresence.user.tag} is ${activity.type} ${activity.name}. They've playing for ${timePlaying}`);
-                if(quests.quests[activity.name] === undefined || quests.quests[activity.name] === null) {
+    if (activity.type == 'PLAYING' && activity.name != "Apple Music" && activity.name != "Cider") {
+        if(activity.timestamps === null | activity.timestamps === undefined) {
+            console.log("No defined start time | " + activity.name)
+        } else {
+            var timePlaying = timeAgo.format(new Date(activity.timestamps.start), 'mini');
+            console.log(`${newPresence.user.tag} is ${activity.type} ${activity.name}. They've playing for ${timePlaying} | in ${newPresence.guild.name}`);
+            con.query('select * from Quests WHERE gameName = '+"'"+activity.name+"'"+';', function (err, result, fields) {
+                if(result === undefined || result === null || result.length === 0) {
                     console.log("No quest found for this activity")
-                } else {
-                    for (let i = 0; i < quests.quests[activity.name].length; i++) {
-                        if(quests.quests[activity.name][i].RequirementType == 'time') {
+                } else{
+                    for (let i = 0; i < result.length; i++) {
+                        if(result[i].requirementType === "time") {
                             if(timePlaying.includes("mo")) {
-                                console.log("We suspect cheating.")
+                                console.log("We suspect cheating")
                             } else {
-                                //if has been playing for hours AND the quest requires hours
-                                if(timePlaying.includes("h") && quests.quests[activity.name][i].fufillment.includes("h")) {
+                                if(timePlaying.includes("h") && result[i].fufillment.includes("h")) {
                                     var checkerTimePlaying = parseInt(timePlaying.slice(0,-1));
-                                    var checkerFufillment = parseInt((quests.quests[activity.name][i].fufillment).slice(0,-1));
-                                    console.log(checkerTimePlaying + " | " + checkerFufillment)
+                                    var checkerFufillment = parseInt((result[i].fufillment).slice(0,-1));
                                     if(checkerTimePlaying >= checkerFufillment) {
-                                        console.log(`${newPresence.user.tag} met requirements for ${quests.quests[activity.name][i].Title}`)
-                                        var userDatabasePRE = fs.readFileSync('./user.json','utf8');
-                                        var userDatabase = JSON.parse(userDatabasePRE);
-                                        var count = Object.keys(userDatabase.users).length;
-                                        for (let p = 0; p < count; p++) {
-                                            var up = Object.keys(userDatabase.users)[p];
-                                            if(up === newPresence.user.id) {
-                                                console.log(newPresence.user.username + " has an Eggium Profile & Has completed a quest! at: " + p)
-                                                //console.log(userDatabase.users[up].achievements)
-                                                console.log(userDatabase.users[up].achievements.length)
-                                                if(userDatabase.users[up].achievements.some(e => e.achievementName === quests.quests[activity.name][i].Title)) {
-                                                    console.log(`${newPresence.user.tag} already has ${quests.quests[activity.name][i].Title}. They completed this quest on ${userDatabase.users[up].achievements[userDatabase.users[up].achievements.findIndex(e => e.achievementName === quests.quests[activity.name][i].Title)].achievementDate}`)
-                                                } else {
-                                                    var dateObj = new Date();
-                                                    var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                                                    var day = dateObj.getUTCDate();
-                                                    var year = dateObj.getUTCFullYear();
-                                                    var achievement = {
-                                                        "achievementName": quests.quests[activity.name][i].Title,
-                                                        "achievementDescription": quests.quests[activity.name][i].Description,
-                                                        "achievementDate": `${month}/${day}/${year}`
-                                                    }
-                                                    console.log(achievement)
-                                                    console.log(newPresence.userId)
-                                                    client.users.fetch(newPresence.userId).then(user => {
-                                                        const embed = new MessageEmbed()
-                                                        .setTitle("Eggium Achievements - " + activity.name)
-                                                        .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                                                        //   .setThumbnail(mostRecentlyPlayedGame.iconURL)
-                                                        .setDescription(`You have completed the quest: ${quests.quests[activity.name][i].Title}`);
-                                                      embed
-                                                        .setFooter({
-                                                          text: "Eggium - Tanner Approved",
-                                                        })
-                                                        .setTimestamp();
-                                                        user.send({ embeds: [embed]})
-                                                    });
-                                                    userDatabase.users[up].achievements.push(achievement)
-                                                    console.log(userDatabase.users[up].achievements)
-                                                    fs.writeFileSync('user.json',JSON.stringify(userDatabase))
-                                                    console.log(JSON.stringify(userDatabase))
-                                                }
+                                        var questinfo = result[i];
+                                        con.query('select * from Users WHERE discordID = '+"'"+newPresence.user.id+"'"+';', function (err, result, fields) {
+                                            if(result === undefined || result === null || result.length === 0) {
+                                                console.log(`${newPresence.user.username} has completed a quest but doesnt have an Eggium profile`)
                                             } else {
-                                                console.log(newPresence.user.username + " doesnt have an Eggium Profile at: " + p)
+                                                con.query('SELECT * FROM QuestHistory WHERE questID = '+'"'+questinfo.questID+'"'+' AND discordID = "'+newPresence.user.id+'";', function (err, result, fields) {
+                                                    if(result === undefined || result === null || result.length === 0) {
+                                                        console.log(`${newPresence.user.tag} has completed a new quest | ${questinfo.questName}`)
+                                                        var dateObj = new Date();
+                                                        var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                                                        var day = dateObj.getUTCDate();
+                                                        var year = dateObj.getUTCFullYear();
+                                                        var insertToQuestHistory = 'insert into QuestHistory(discordID,questID,dateRecieved) values ("'+newPresence.user.id+'","'+questinfo.questID+'","'+`${year}/${month}/${day}`+'");';
+                                                        con.query(insertToQuestHistory, function (err, result) {
+                                                            if (err) throw err;
+                                                            console.log(`1 Quest inserted for ${newPresence.user.username}`);
+                                                            client.users.fetch(newPresence.userId).then(user => {
+                                                                const embed = new MessageEmbed()
+                                                                .setTitle("Eggium Achievements - " + activity.name)
+                                                                .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                                                                .setDescription(`You have completed the quest: ${questinfo.questName}`);
+                                                              embed
+                                                                .setFooter({text: "Eggium - Tanner Approved"})
+                                                                .setTimestamp();
+                                                                user.send({ embeds: [embed]})
+                                                            });
+                                                        });
+                                                    } else {
+                                                        //THEY ALREADY HAVE
+                                                        //console.log(`${newPresence.user.username} already has ${questinfo.questName}. They completed it on ${result[0].dateRecieved}`)
+                                                    }
+                                                });
                                             }
-                                            
-                                        }
-                                    } else {
-                                        console.log(`${newPresence.user.tag} did not meet requirements for ${quests.quests[activity.name][i].Title} | Looking for hours`)
+                                        });
+                                    } else{
+                                        //THEY DIDNT COMPLETE REQUIREMENTS
+                                        //console.log(`${newPresence.user.tag} did not meet requirements for ${result[i].questName} | Looking for hours`)
                                     }
                                 }
-                                //if has been playing for hours AND the quest requires hours
-                                if(timePlaying.includes("m") && quests.quests[activity.name][i].fufillment.includes("m")) {
+
+
+                                if(timePlaying.includes("m") && result[i].fufillment.includes("m")) {
                                     var checkerTimePlaying = parseInt(timePlaying.slice(0,-1));
-                                    var checkerFufillment = parseInt((quests.quests[activity.name][i].fufillment).slice(0,-1));
-                                    console.log(checkerTimePlaying + " | " + checkerFufillment)
+                                    var checkerFufillment = parseInt((result[i].fufillment).slice(0,-1));
                                     if(checkerTimePlaying >= checkerFufillment) {
-                                        console.log(`${newPresence.user.tag} met requirements for ${quests.quests[activity.name][i].Title}`)
-                                        var userDatabasePRE = fs.readFileSync('./user.json','utf8');
-                                        var userDatabase = JSON.parse(userDatabasePRE);
-                                        var count = Object.keys(userDatabase.users).length;
-                                        for (let p = 0; p < count; p++) {
-                                            var up = Object.keys(userDatabase.users)[p];
-                                            if(up === newPresence.user.id) {
-                                                console.log(newPresence.user.username + " has an Eggium Profile & Has completed a quest! at: " + p)
-                                                //console.log(userDatabase.users[up].achievements)
-                                                console.log(userDatabase.users[up].achievements.length)
-                                                if(userDatabase.users[up].achievements.some(e => e.achievementName === quests.quests[activity.name][i].Title)) {
-                                                    console.log(`${newPresence.user.tag} already has ${quests.quests[activity.name][i].Title}. They completed this quest on ${userDatabase.users[up].achievements[userDatabase.users[up].achievements.findIndex(e => e.achievementName === quests.quests[activity.name][i].Title)].achievementDate}`)
-                                                } else {
-                                                    var dateObj = new Date();
-                                                    var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                                                    var day = dateObj.getUTCDate();
-                                                    var year = dateObj.getUTCFullYear();
-                                                    var achievement = {
-                                                        "achievementName": quests.quests[activity.name][i].Title,
-                                                        "achievementDescription": quests.quests[activity.name][i].Description,
-                                                        "achievementDate": `${month}/${day}/${year}`
-                                                    }
-                                                    console.log(achievement)
-                                                    console.log(newPresence.userId)
-                                                    client.users.fetch(newPresence.userId).then(user => {
-                                                        const embed = new MessageEmbed()
-                                                        .setTitle("Eggium Achievements - " + activity.name)
-                                                        .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                                                        //   .setThumbnail(mostRecentlyPlayedGame.iconURL)
-                                                        .setDescription(`You have completed the quest: ${quests.quests[activity.name][i].Title}`);
-                                                      embed
-                                                        .setFooter({
-                                                          text: "Eggium - Tanner Approved",
-                                                        })
-                                                        .setTimestamp();
-                                                        user.send({ embeds: [embed]})
-                                                    });
-                                                    userDatabase.users[up].achievements.push(achievement)
-                                                    console.log(userDatabase.users[up].achievements)
-                                                    fs.writeFileSync('user.json',JSON.stringify(userDatabase))
-                                                    console.log(JSON.stringify(userDatabase))
-                                                }
+                                        var questinfo = result[i];
+                                        con.query('select * from Users WHERE discordID = '+"'"+newPresence.user.id+"'"+';', function (err, result, fields) {
+                                            if(result === undefined || result === null || result.length === 0) {
+                                                console.log(`${newPresence.user.username} has completed a quest but doesnt have an Eggium profile`)
                                             } else {
-                                                console.log(newPresence.user.username + " doesnt have an Eggium Profile at: " + p)
+                                                console.log(`${newPresence.user.username} has an Eggium Profile`)
+                                                con.query('SELECT * FROM QuestHistory WHERE questID = '+'"'+questinfo.questID+'"'+' AND discordID = "'+newPresence.user.id+'";', function (err, result, fields) {
+                                                    if(result === undefined || result === null || result.length === 0) {
+                                                        console.log(`${newPresence.user.tag} has completed a new quest | ${questinfo.questName}`)
+                                                        var dateObj = new Date();
+                                                        var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                                                        var day = dateObj.getUTCDate();
+                                                        var year = dateObj.getUTCFullYear();
+                                                        var insertToQuestHistory = 'insert into QuestHistory(discordID,questID,dateRecieved) values ("'+newPresence.user.id+'","'+questinfo.questID+'","'+`${year}/${month}/${day}`+'");';
+                                                        con.query(insertToQuestHistory, function (err, result) {
+                                                            if (err) throw err;
+                                                            console.log(`1 Quest inserted for ${newPresence.user.username}`);
+                                                            client.users.fetch(newPresence.userId).then(user => {
+                                                                const embed = new MessageEmbed()
+                                                                .setTitle("Eggium Achievements - " + activity.name)
+                                                                .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                                                                .setDescription(`You have completed the quest: ${questinfo.questName}`);
+                                                              embed
+                                                                .setFooter({text: "Eggium - Tanner Approved"})
+                                                                .setTimestamp();
+                                                                user.send({ embeds: [embed]})
+                                                            });
+                                                        });
+                                                    } else {
+                                                        //THEY ALREADY HAVE
+                                                        //console.log(`${newPresence.user.username} already has ${questinfo.questName}. They completed it on ${result[0].dateRecieved}`)
+                                                    }
+                                                });
                                             }
-                                            
-                                        }
-                                    } else {
-                                        console.log(`${newPresence.user.tag} did not meet requirements for ${quests.quests[activity.name][i].Title} | Looking for minutes`)
+                                        });
+                                    } else{
+                                        //Didnt meet requirements
+                                        //console.log(`${newPresence.user.tag} did not meet requirements for ${result[i].questName} | Looking for minutes`)
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-      } else if(activity.type == 'LISTENING' || activity.name == "Apple Music") {
-        if(activity.details == null) {
-
-        } else {
+            });
+        }
+    } else if(activity.type == 'LISTENING' || activity.name == "Apple Music") {
+        //Checks if you are listening to Music
+        if(activity.details == null) {} 
+        else {
+            //You are listening to music
             var songartist;
             var songname;
-            var songInfo;
             if(activity.name == "Apple Music" || activity.name == "Cider") {
                 songname = activity.details;
                 songartist = activity.state.slice(3);
-                songInfo = {"songName": songname, "artist": songartist, "timesPlayed": 1}
             } else {
                 songname = activity.details;
                 songartist = activity.state;
-                songInfo = {"songName": songname, "artist": songartist, "timesPlayed": 1}
             }
 
-            var userDatabasePRE = fs.readFileSync('./user.json','utf8');
-            var userDatabase = JSON.parse(userDatabasePRE);
-            if(userDatabase.users[newPresence.user.id] === undefined || userDatabase.users[newPresence.user.id] === null) {
-                console.log(`${newPresence.user.tag} is listening to ${songname} by ${songartist} but has no Eggium Profile. They should opt in!`)
-            } else {
-                var hasUserListenedToSongBefore = userDatabase.users[newPresence.user.id].listeningHistory.some(item => item.songName === songname && item.artist === songartist);
-                console.log(`${hasUserListenedToSongBefore} | ${newPresence.user.tag} is LISTENING to ${songname} by ${songartist}.`);
-                if(hasUserListenedToSongBefore === true) {
-
-                    if(userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo === songname) {
-                        console.log("This is a presnse update. Likely not a new song.")
-                    } else {
-                        userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
-                        userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
-                        userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
-                        var timesAlreadyPlayed = userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed
-                        userDatabase.users[newPresence.user.id].listeningHistory.find(obj => obj.songName === songname).timesPlayed = parseInt(timesAlreadyPlayed) + 1;
-                        fs.writeFileSync('user.json',JSON.stringify(userDatabase))
-                    }
-    
-                    //append to times played
-                    //add to last played song
-    
-                } else if(hasUserListenedToSongBefore === false) {
-                    //add to listening history
-                    //add to last played song
-                    if(userDatabase.users[newPresence.user.id].listeningHistory[0] === undefined) {
-                        const makeLatestListen = {
-                            lastSongListenedTo: songname,
-                            artist: songartist,
-                            dateListened: activity.timestamps.start
+            //Checks if you have an Eggium Profile
+            con.query('select * from Users WHERE discordID = '+"'"+newPresence.user.id+"'"+';', function (err, result, fields) {
+                if(result === undefined || result === null || result.length === 0) {
+                    console.log(`${newPresence.user.tag} is listening to ${songname} by ${songartist} but has no Eggium Profile. They should opt in!`)
+                } else {
+                    //You have an Eggium Profile
+                    console.log(`${newPresence.user.tag} is listening to ${songname} by ${songartist}`)
+                    //Checks your listening History and [0] is your last song
+                    con.query('SELECT * FROM ListeningHistory WHERE discordID = "'+newPresence.user.id+'" ORDER BY listenedTime DESC;', function (err, result, fields) {
+                        var wasThisUsersLastSong;
+                        //checks if you've listened before
+                        if(result === undefined || result === null || result.length === 0) {
+                            //you have not
+                            console.log("User's first song ever")
+                            wasThisUsersLastSong = false;
+                        } else {
+                            //you have! It checks the last song you listened to
+                            con.query('SELECT * FROM Songs WHERE songID = '+ result[0].songID.toString()+';', function (err, result, fields) {
+                                console.log(`${newPresence.user.tag} listened to ${result[0].songName} by ${result[0].songArtist} last`)
+                                //checks if you're listening to the same song
+                                if(result[0].songName == songname && result[0].songArtist == songartist) {
+                                    //you are
+                                    wasThisUsersLastSong = true;
+                                } else{
+                                    //you are not
+                                    wasThisUsersLastSong = false;
+                                }
+                            });
                         }
-                        userDatabase.users[newPresence.user.id].listeningHistory.push(makeLatestListen)
-                    } else {
-                        userDatabase.users[newPresence.user.id].listeningHistory[0].lastSongListenedTo = songname;
-                        userDatabase.users[newPresence.user.id].listeningHistory[0].artist = songartist;
-                        userDatabase.users[newPresence.user.id].listeningHistory[0].dateListened = activity.timestamps.start;
-                    }
-                    userDatabase.users[newPresence.user.id].listeningHistory.push(songInfo)
-                    fs.writeFileSync('user.json',JSON.stringify(userDatabase))
+                        //checks if this should log a new song
+                        setTimeout(function() {
+                            if(wasThisUsersLastSong === true) {
+                                //nah. It's the same song. Probably just a presense update
+                                console.log("This is a presence update. Likely not a new song.")
+                            } else {
+                                //it's a new song!
+                                console.log("This is a viable song")
+                                //Checks if the song is already in the database
+                                con.query('SELECT * FROM Songs WHERE songName = "'+songname+'" AND songArtist = "'+songartist+'";', function (err, result, fields) {
+                                    if(result === undefined || result === null || result.length === 0) {
+                                        //it is not in the database
+                                        console.log("Song is not in the database. Adding it")
+                                        //insert song into database
+                                        var sql = 'INSERT INTO Songs (songName, songArtist) VALUES ("'+songname+'","'+songartist+'");';
+                                        con.query(sql, function (err, result) {
+                                            if (err) throw err;
+                                            console.log(`new song recorded for ${songname} by ${songartist}`);
+                                            //added!
+                                            //Now it checks again to see if the song is in the database
+                                            con.query('SELECT * FROM Songs WHERE songName = "'+songname+'" AND songArtist = "'+songartist+'";', function (err, result, fields) {
+                                                //Chances are. It 100% will be now. So it adds it to your Listening History
+                                                var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(new Date())+'");'
+                                                con.query(sql, function (err, result) {
+                                                if (err) throw err;
+                                                //added!
+                                                console.log(`1 songHistory inserted for ${newPresence.user.username}`);
+                                                });
+                                            });
+                                        });
+                                    } else {
+                                        console.log(`Song is in the database at ${result[0].songID}`)
+                                        //It is in the database. And we know the ID!
+
+                                        //So we'll just insert it into your listening history
+                                        var datetimePre = new Date();
+                                        var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetimePre.toISOString().slice(0, 19).replace('T', ' '))+'");'
+                                        con.query(sql, function (err, result) {
+                                        if (err) throw err;
+                                        //did it!
+                                        console.log(`1 songHistory inserted for ${newPresence.user.username}`);
+                                        });
+                                    }
+                                });
+                            }
+                        }, 300);
+                    });
                 }
-            }
+            });
+
         }
       }
     });
@@ -405,6 +410,13 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
 client.once('ready', () => {
     console.log('The battle is now. Eggium Version: ' + config.eggium_version);
     // Registering the commands in the client
+
+    con.connect(function(err) {
+        if (err) throw err;
+        console.log("Connected!");
+    });
+
+
     const CLIENT_ID = client.user.id;
     const rest = new REST({
         version: '9'
