@@ -197,9 +197,12 @@ const timeAgo = new TimeAgo('en-US')
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
 
-    if(newPresence.activities[1] != undefined && newPresence.activities[1].details != undefined && newPresence.activities[1].details != null && newPresence.activities[1].details.toLowerCase() === "idling") return;
-    if(newPresence.activities[1] != undefined && newPresence.activities[1].state != undefined && newPresence.activities[1].state != null && newPresence.activities[1].state.toLowerCase() === "idling") return;
-    console.log(diff(newPresence, oldPresence));
+    console.log(newPresence.activities.length)
+    for (let i = 0; i < newPresence.activities.length; i++) {
+        if(newPresence.activities[i] != undefined && newPresence.activities[i].details != undefined && newPresence.activities[i].details != null && newPresence.activities[i].details.toLowerCase() === "idling") return;
+        if(newPresence.activities[i] != undefined && newPresence.activities[i].state != undefined && newPresence.activities[i].state != null && newPresence.activities[i].state.toLowerCase() === "idling") return;
+    }
+    //console.log(diff(newPresence, oldPresence));
     //if((activity.state).toLowerCase() === 'idling') return;
     newPresence.activities.forEach((activity) => {
         //EXPERIMENTAL
