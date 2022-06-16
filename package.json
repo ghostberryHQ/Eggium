@@ -3,6 +3,7 @@
     "@discordjs/builders": "^0.15.0",
     "@discordjs/rest": "^0.4.1",
     "aws-sdk": "^2.1130.0",
+    "deep-object-diff": "^1.1.7",
     "discord-command-cooldown": "^1.0.8",
     "discord-economy-super": "^1.5.2",
     "discord.js": "^13.8.0",
