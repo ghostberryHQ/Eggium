@@ -68,7 +68,6 @@ module.exports = {
                       achievementsAmount = "0";
                     } else {
                       achievementsAmount = result[0].questCount;
-                      console.log(result[0].questCount)
                     }
                   });
                   var month = dateObj.getUTCMonth() + 1; //months from 1-12

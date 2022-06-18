@@ -22,13 +22,16 @@ var con = mysql.createConnection({
     user: config.AWS_RDS_USERNAME,
     password: config.AWS_RDS_PASSWORD,
     database: config.AWS_RDS_DB_NAME
-  });
+});
 
 const myApiKey = config.SONGLINK_API_KEY
 const getLinks = songlink.getClient({ apiKey: myApiKey });
 const { diff, addedDiff, deletedDiff, updatedDiff, detailedDiff } =  require('deep-object-diff');
 
 exports.con = con;
+setInterval(function () {
+    con.query('SELECT 1');
+}, 5000);
 
 
 // Creating a collection for commands in client
@@ -196,8 +199,6 @@ const timeAgo = new TimeAgo('en-US')
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
-
-    console.log(newPresence.activities.length)
     for (let i = 0; i < newPresence.activities.length; i++) {
         if(newPresence.activities[i] != undefined && newPresence.activities[i].details != undefined && newPresence.activities[i].details != null && newPresence.activities[i].details.toLowerCase() === "idling") return;
         if(newPresence.activities[i] != undefined && newPresence.activities[i].state != undefined && newPresence.activities[i].state != null && newPresence.activities[i].state.toLowerCase() === "idling") return;
@@ -231,38 +232,38 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                             if(result === undefined || result === null || result.length === 0) {
                                                 console.log(`${newPresence.user.username} has completed a quest but doesnt have an Eggium profile`)
                                             } else {
-                                                con.query('SELECT * FROM QuestHistory WHERE questID = '+'"'+questinfo.questID+'"'+' AND discordID = "'+newPresence.user.id+'";', function (err, result, fields) {
-                                                    if(result === undefined || result === null || result.length === 0) {
-                                                        console.log(`${newPresence.user.tag} has completed a new quest | ${questinfo.questName}`)
-                                                        var dateObj = new Date();
-                                                        var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                                                        var day = dateObj.getUTCDate();
-                                                        var year = dateObj.getUTCFullYear();
-                                                        var insertToQuestHistory = 'insert into QuestHistory(discordID,questID,dateRecieved) values ("'+newPresence.user.id+'","'+questinfo.questID+'","'+`${year}/${month}/${day}`+'");';
-                                                        con.query(insertToQuestHistory, function (err, result) {
-                                                            if (err) throw err;
-                                                            console.log(`1 Quest inserted for ${newPresence.user.username}`);
-                                                            client.users.fetch(newPresence.userId).then(user => {
-                                                                const embed = new MessageEmbed()
-                                                                .setTitle("Eggium Achievements - " + activity.name)
-                                                                .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                                                                .setDescription(`You have completed the quest: ${questinfo.questName}`);
-                                                              embed
-                                                                .setFooter({text: "Eggium - Tanner Approved"})
-                                                                .setTimestamp();
-                                                                user.send({ embeds: [embed]})
+                                                setTimeout(function() {
+                                                    con.query('SELECT * FROM QuestHistory WHERE questID = '+'"'+questinfo.questID+'"'+' AND discordID = "'+newPresence.user.id+'";', function (err, result, fields) {
+                                                        if(result === undefined || result === null || result.length === 0) {
+                                                            console.log(`${newPresence.user.tag} has completed a new quest | ${questinfo.questName}`)
+                                                            var dateObj = new Date();
+                                                            var month = dateObj.getUTCMonth() + 1; //months from 1-12
+                                                            var day = dateObj.getUTCDate();
+                                                            var year = dateObj.getUTCFullYear();
+                                                            var insertToQuestHistory = 'insert into QuestHistory(discordID,questID,dateRecieved) values ("'+newPresence.user.id+'","'+questinfo.questID+'","'+`${year}/${month}/${day}`+'");';
+                                                            con.query(insertToQuestHistory, function (err, result) {
+                                                                if (err) throw err;
+                                                                console.log(`1 Quest inserted for ${newPresence.user.username}`);
+                                                                client.users.fetch(newPresence.userId).then(user => {
+                                                                    const embed = new MessageEmbed()
+                                                                    .setTitle("Eggium Achievements - " + activity.name)
+                                                                    .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                                                                    .setDescription(`You have completed the quest: ${questinfo.questName}`);
+                                                                  embed
+                                                                    .setFooter({text: "Eggium - Tanner Approved"})
+                                                                    .setTimestamp();
+                                                                    user.send({ embeds: [embed]})
+                                                                });
                                                             });
-                                                        });
-                                                    } else {
-                                                        //THEY ALREADY HAVE
-                                                        //console.log(`${newPresence.user.username} already has ${questinfo.questName}. They completed it on ${result[0].dateRecieved}`)
-                                                    }
-                                                });
+                                                        } else {
+                                                            //THEY ALREADY HAVE
+                                                        }
+                                                    });
+                                                },1000)
                                             }
                                         });
                                     } else{
-                                        //THEY DIDNT COMPLETE REQUIREMENTS
-                                        //console.log(`${newPresence.user.tag} did not meet requirements for ${result[i].questName} | Looking for hours`)
+                                        //Didnt meet requirements
                                     }
                                 }
 
@@ -301,14 +302,12 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                         });
                                                     } else {
                                                         //THEY ALREADY HAVE
-                                                        //console.log(`${newPresence.user.username} already has ${questinfo.questName}. They completed it on ${result[0].dateRecieved}`)
                                                     }
                                                 });
                                             }
                                         });
                                     } else{
                                         //Didnt meet requirements
-                                        //console.log(`${newPresence.user.tag} did not meet requirements for ${result[i].questName} | Looking for minutes`)
                                     }
                                 }
                             }
