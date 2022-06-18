@@ -223,7 +223,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                             if(timePlaying.includes("mo")) {
                                 console.log("We suspect cheating")
                             } else {
-                                if(timePlaying.includes("h") && result[i].fufillment.includes("h")) {
+                                if((timePlaying.includes("h") && result[i].fufillment.includes("h")) || (timePlaying.includes("m") && result[i].fufillment.includes("m")) || (timePlaying.includes("d") && result[i].fufillment.includes("d"))) {
                                     var checkerTimePlaying = parseInt(timePlaying.slice(0,-1));
                                     var checkerFufillment = parseInt((result[i].fufillment).slice(0,-1));
                                     if(checkerTimePlaying >= checkerFufillment) {
@@ -260,50 +260,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                         }
                                                     });
                                                 },1000)
-                                            }
-                                        });
-                                    } else{
-                                        //Didnt meet requirements
-                                    }
-                                }
-
-
-                                if(timePlaying.includes("m") && result[i].fufillment.includes("m")) {
-                                    var checkerTimePlaying = parseInt(timePlaying.slice(0,-1));
-                                    var checkerFufillment = parseInt((result[i].fufillment).slice(0,-1));
-                                    if(checkerTimePlaying >= checkerFufillment) {
-                                        var questinfo = result[i];
-                                        con.query('select * from Users WHERE discordID = '+"'"+newPresence.user.id+"'"+';', function (err, result, fields) {
-                                            if(result === undefined || result === null || result.length === 0) {
-                                                console.log(`${newPresence.user.username} has completed a quest but doesnt have an Eggium profile`)
-                                            } else {
-                                                console.log(`${newPresence.user.username} has an Eggium Profile`)
-                                                con.query('SELECT * FROM QuestHistory WHERE questID = '+'"'+questinfo.questID+'"'+' AND discordID = "'+newPresence.user.id+'";', function (err, result, fields) {
-                                                    if(result === undefined || result === null || result.length === 0) {
-                                                        console.log(`${newPresence.user.tag} has completed a new quest | ${questinfo.questName}`)
-                                                        var dateObj = new Date();
-                                                        var month = dateObj.getUTCMonth() + 1; //months from 1-12
-                                                        var day = dateObj.getUTCDate();
-                                                        var year = dateObj.getUTCFullYear();
-                                                        var insertToQuestHistory = 'insert into QuestHistory(discordID,questID,dateRecieved) values ("'+newPresence.user.id+'","'+questinfo.questID+'","'+`${year}/${month}/${day}`+'");';
-                                                        con.query(insertToQuestHistory, function (err, result) {
-                                                            if (err) throw err;
-                                                            console.log(`1 Quest inserted for ${newPresence.user.username}`);
-                                                            client.users.fetch(newPresence.userId).then(user => {
-                                                                const embed = new MessageEmbed()
-                                                                .setTitle("Eggium Achievements - " + activity.name)
-                                                                .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                                                                .setDescription(`You have completed the quest: ${questinfo.questName}`);
-                                                              embed
-                                                                .setFooter({text: "Eggium - Tanner Approved"})
-                                                                .setTimestamp();
-                                                                user.send({ embeds: [embed]})
-                                                            });
-                                                        });
-                                                    } else {
-                                                        //THEY ALREADY HAVE
-                                                    }
-                                                });
                                             }
                                         });
                                     } else{
