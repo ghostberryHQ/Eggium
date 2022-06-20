@@ -196,7 +196,6 @@ const { builtinModules } = require('module');
 TimeAgo.addDefaultLocale(en)
 
 const timeAgo = new TimeAgo('en-US')
-var lastPresenceMessage;
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
@@ -214,9 +213,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
             console.log("No defined start time | " + activity.name)
         } else {
             var timePlaying = timeAgo.format(new Date(activity.timestamps.start), 'mini');
-            if(!lastPresenceMessage === `${newPresence.user.tag} is ${activity.type} ${activity.name}. They've been playing for ${timePlaying}`) {
-                console.log(`${newPresence.user.tag} is ${activity.type} ${activity.name}. They've been playing for ${timePlaying} | in ${newPresence.guild.name}`);
-            };
             lastPresenceMessage = `${newPresence.user.tag} is ${activity.type} ${activity.name}. They've been playing for ${timePlaying}`
             con.query('select * from Quests WHERE gameName = '+"'"+activity.name+"'"+';', function (err, result, fields) {
                 if(result === undefined || result === null || result.length === 0) {
