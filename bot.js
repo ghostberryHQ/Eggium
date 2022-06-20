@@ -102,10 +102,8 @@ client.on('messageReactionAdd', (reaction, user) => {
     if (reaction.emoji.name === '⭐') {
         const stars = reaction.count;
         const userWhoSend = reaction.message.author;
-        //console.log(userWhoSend);
-        //console.log(userWhoSend.id);
-        //console.log(userWhoSend.avatar);
         if(stars === 5) {
+
             //make an embed
             const embed = new Discord.MessageEmbed()
             .setTitle('⭐ Starboard Message ⭐')
@@ -115,7 +113,14 @@ client.on('messageReactionAdd', (reaction, user) => {
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
             });
-            client.channels.cache.get(config.starboard_id).send({ embeds: [embed] });
+            con.query('select CAST(starboardChannel as CHAR) from Servers WHERE serverID = "'+member.guild.id+'";', function (err, result, fields) {
+                if(err) throw err;
+                if(result === undefined || result === null || result.length === 0 || result[0]["CAST(starboardChannel as CHAR)"] === 0 || result[0]["CAST(starboardChannel as CHAR)"] === "0") {
+                    console.log("no starboard channel set")
+                } else {
+                    client.channels.cache.get(result[0]["CAST(starboardChannel as CHAR)"]).send({ embeds: [embed] });
+                }
+            });
         }
         console.log('#' + stars + ' ⭐ reactions have been added');
     } else {
@@ -184,18 +189,43 @@ client.on("messageCreate", async (message) => {
 })
 
 client.on('guildMemberAdd', member => {
-    member.roles.add(member.guild.roles.cache.find(i => i.name === 'movers'))
-    console.log(member)
-    client.channels.cache.get('962888183362764861').send("Welcome to the resistance, " + member.user.username + ". Glad you could join us.");
+    con.query('select CAST(serverID as CHAR),CAST(welcomeChannel as CHAR),welcomeRole,welcomeMessage from Servers WHERE serverID = "'+member.guild.id+'";', function (err, result, fields) {
+        if (err) throw err;
+        if(result === undefined || result === null || result.length === 0) {
+            console.log(`${member.guild.name} is not yet in the database`)
+        } else {
+            if(result[0].welcomeRole != "(null)") member.roles.add(member.guild.roles.cache.find(i => i.name === result[0].welcomeRole));
+            if(result[0].welcomeMessage != "(null)") var constructWelcomeMessage = (result[0].welcomeMessage).replace("%user%", member.user.username);
+            if(result[0]["CAST(welcomeChannel as CHAR)"] != "0" && result[0].welcomeMessage != "(null)") client.channels.cache.get(result[0]["CAST(welcomeChannel as CHAR)"]).send(constructWelcomeMessage.toString());
+        }
+    });
 });
 
 const TimeAgo =  require('javascript-time-ago');
 const en =  require('javascript-time-ago/locale/en');
-const { builtinModules } = require('module');
 
 TimeAgo.addDefaultLocale(en)
 
 const timeAgo = new TimeAgo('en-US')
+
+var theFireTwicePatch = [];
+var theFireTwicePatchMusic = [];
+
+
+function theFireTwicePatcherGames(userID) {
+    theFireTwicePatch.push(userID);
+    setTimeout(function() {
+        theFireTwicePatch = theFireTwicePatch.filter(item => item !== userID)
+        //console.log("removed user from theFireTwicePatch")
+    }, 1000);
+}
+function theFireTwicePatcherMusic(userID) {
+    theFireTwicePatchMusic.push(userID);
+    setTimeout(function() {
+        theFireTwicePatchMusic = theFireTwicePatchMusic.filter(item => item !== userID)
+        //console.log("removed user from theFireTwicePatchMusic")
+    }, 1000);
+}
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
     if (!newPresence.activities) return false;
@@ -203,12 +233,14 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         if(newPresence.activities[i] != undefined && newPresence.activities[i].details != undefined && newPresence.activities[i].details != null && newPresence.activities[i].details.toLowerCase() === "idling") return;
         if(newPresence.activities[i] != undefined && newPresence.activities[i].state != undefined && newPresence.activities[i].state != null && newPresence.activities[i].state.toLowerCase() === "idling") return;
     }
-    //console.log(diff(newPresence, oldPresence));
-    //if((activity.state).toLowerCase() === 'idling') return;
     newPresence.activities.forEach((activity) => {
-        //EXPERIMENTAL
     if (activity.type == 'PLAYING' && activity.name != "Apple Music" && activity.name != "Cider") {
         if(newPresence.user.bot) return;
+        if (theFireTwicePatch.includes(newPresence.user.id)){
+            //console.log("user is on theFireTwicePatch cooldown")
+            return;
+        }
+        theFireTwicePatcherGames(newPresence.user.id);
         if(activity.timestamps === null | activity.timestamps === undefined) {
             console.log("No defined start time | " + activity.name)
         } else {
@@ -275,6 +307,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         }
     } else if(activity.type == 'LISTENING' || activity.name == "Apple Music") {
         if(newPresence.user.bot) return;
+        if (theFireTwicePatchMusic.includes(newPresence.user.id)) return;
+        theFireTwicePatcherMusic(newPresence.user.id);
         //Checks if you are listening to Music
         if(activity.details == null) {} 
         else {
@@ -345,7 +379,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                 con.query(sql, function (err, result) {
                                                 if (err) throw err;
                                                 //added!
-                                                console.log(`1 songHistory inserted for ${newPresence.user.username}`);
+                                                    console.log(`1 songHistory inserted for ${newPresence.user.username}`);
                                                 });
                                             });
                                         });
