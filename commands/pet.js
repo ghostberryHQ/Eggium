@@ -27,14 +27,22 @@ module.exports = {
                 {
                     name: 'panda', 
                     value: 'panda',
-                })
+                },
+                {
+                    name: 'fox', 
+                    value: 'fox',
+                },
+                {
+                    name: 'kangaroo', 
+                    value: 'kangaroo',
+                },)
                 .setRequired(true)),
     async execute(interaction) {
 
         var animal = interaction.options.getString('animal');
 
         if(animal == 'dog') {
-            const request = https.get('https://random.dog/woof.json', (response) => {
+            const request = https.get('https://some-random-api.ml/img/dog', (response) => {
                 response.setEncoding('utf8');
                 let body = '';
                 response.on('data', (chunk) => {
@@ -42,11 +50,11 @@ module.exports = {
                 });
                 response.on('end', () => {
                     const data = JSON.parse(body);
-                    interaction.reply(data.url);
+                    interaction.reply({content: data.link});
                 });
             });
         } else if(animal == 'cat') {
-            const request = https.get('https://api.thecatapi.com/v1/images/search?format=json', (response) => {
+            const request = https.get('https://some-random-api.ml/img/cat', (response) => {
                 response.setEncoding('utf8');
                 let body = '';
                 response.on('data', (chunk) => {
@@ -54,7 +62,7 @@ module.exports = {
                 });
                 response.on('end', () => {
                     const data = JSON.parse(body);
-                    interaction.reply(data[0].url);
+                    interaction.reply({content: data.link});
                 });
             });
         } else if(animal == 'panda') {
@@ -66,7 +74,7 @@ module.exports = {
                 });
                 response.on('end', () => {
                     const data = JSON.parse(body);
-                    interaction.reply(data.link);
+                    interaction.reply({content: data.link});
                 });
             });
         } else if(animal == 'koala') {
@@ -78,7 +86,7 @@ module.exports = {
                 });
                 response.on('end', () => {
                     const data = JSON.parse(body);
-                    interaction.reply(data.link);
+                    interaction.reply({content: data.link});
                 });
             });
         } else if(animal == 'bird') {
@@ -90,7 +98,31 @@ module.exports = {
                 });
                 response.on('end', () => {
                     const data = JSON.parse(body);
-                    interaction.reply(data.link);
+                    interaction.reply({content: data.link});
+                });
+            });
+        } else if(animal == 'fox') {
+            const request = https.get('https://some-random-api.ml/img/fox', (response) => {
+                response.setEncoding('utf8');
+                let body = '';
+                response.on('data', (chunk) => {
+                    body += chunk;
+                });
+                response.on('end', () => {
+                    const data = JSON.parse(body);
+                    interaction.reply({content: data.link});
+                });
+            });
+        } else if(animal == 'kangaroo') {
+            const request = https.get('https://some-random-api.ml/img/kangaroo', (response) => {
+                response.setEncoding('utf8');
+                let body = '';
+                response.on('data', (chunk) => {
+                    body += chunk;
+                });
+                response.on('end', () => {
+                    const data = JSON.parse(body);
+                    interaction.reply({content: data.link});
                 });
             });
         }

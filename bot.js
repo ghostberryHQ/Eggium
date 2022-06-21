@@ -64,8 +64,7 @@ client.on('interactionCreate', async interaction => {
             finalSteamID = steamIdentifier;
             steam.getUserSummary(steamIdentifier).then(summary => {
                 console.log(summary);
-                beforeSteamName=summary.url;
-                finalSteamName = beforeSteamName.slice(30, -1);
+                finalSteamName = summary.nickname;
             }).catch((reason) => {
                 console.log(reason)
             });
@@ -83,6 +82,7 @@ client.on('interactionCreate', async interaction => {
                 con.query(sql, function (err, result) {
                   if (err) throw err;
                   console.log(`1 record inserted for ${interaction.user.username}`);
+                  interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
                 });
         }, 500)
     }

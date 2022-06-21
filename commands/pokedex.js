@@ -2,6 +2,10 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const https = require('https');
 
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('pokedex')
@@ -25,14 +29,26 @@ module.exports = {
                 if(data.error == "Sorry, I could not find that pokemon") {
                     interaction.reply({ content: 'That Pokemon could not be found!' , ephemeral: true});
                 } else {
+                    var evoLine;
+
+                    if(data.family.evolutionLine === null || data.family.evolutionLine === undefined || data.family.evolutionLine.length === 0) {
+                        evoLine = capitalizeFirstLetter(data.name)
+                    } else {
+                        evoLine = data.family.evolutionLine.join(' -> ')
+                    }
+
                     const embed = new MessageEmbed()
-                        .setTitle('Pokedex Entry - ' + data.id)
+                        .setTitle('Pokedex Entry - #' + `${data.id} | ${capitalizeFirstLetter(data.name)}`)
                         .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                         .setThumbnail(data.sprites.animated)
-                        .setDescription(
-                            "Name: " + data.name +
-                            "\nGeneration: " + data.generation +
-                            "\nDescription: " + data.description)
+                        .setDescription(data.description)
+                        .addFields(
+                            { name: 'Type', value: data.type.join(' | '), inline: true },
+                            { name: 'Gender Ratio', value: data.gender.join(' | ').replace("male", "♂").replace("female", "♀"), inline: true },
+                            { name: 'Generation', value: data.generation, inline: true },
+                            { name: 'Abilities', value: data.abilities.join(' | '), inline: false },
+                            { name: 'Evolution Line', value: evoLine, inline: false },
+                        )
                         embed.setFooter({
                             text: "Eggium - Tanner Approved"
                         })

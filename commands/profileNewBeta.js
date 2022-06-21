@@ -73,7 +73,8 @@ module.exports = {
                   var month = dateObj.getUTCMonth() + 1; //months from 1-12
                   var day = dateObj.getUTCDate();
                   var year = dateObj.getUTCFullYear();
-                  var dateRegistered = `${month}/${day}/${year}`;
+                  //var dateRegistered = `${month}/${day}/${year}`;
+                  var dateRegistered = `<t:${dateObj.getTime() / 1000}:D>`;
                   setTimeout(function() {
                     const embed = new MessageEmbed()
                     .setTitle("Eggium Profile - " + discordName)
@@ -89,7 +90,7 @@ module.exports = {
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                   interaction.reply({ embeds: [embed], ephemeral: true });
-                  }, 200);
+                  }, 300);
                 });
               });
             }
