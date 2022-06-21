@@ -103,17 +103,16 @@ client.on('messageReactionAdd', (reaction, user) => {
         const stars = reaction.count;
         const userWhoSend = reaction.message.author;
         if(stars === 5) {
-
             //make an embed
             const embed = new Discord.MessageEmbed()
             .setTitle('⭐ Starboard Message ⭐')
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             .setThumbnail('https://cdn.discordapp.com/avatars/'+userWhoSend.id+'/'+userWhoSend.avatar+'.jpeg')
-            .setDescription(String(reaction.message.content) + " -"+userWhoSend.username)
+            .setDescription(`"${String(reaction.message.content)}" - ${userWhoSend.username}`)
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
             });
-            con.query('select CAST(starboardChannel as CHAR) from Servers WHERE serverID = "'+member.guild.id+'";', function (err, result, fields) {
+            con.query('select CAST(starboardChannel as CHAR) from Servers WHERE serverID = "'+reaction.message.guildId+'";', function (err, result, fields) {
                 if(err) throw err;
                 if(result === undefined || result === null || result.length === 0 || result[0]["CAST(starboardChannel as CHAR)"] === 0 || result[0]["CAST(starboardChannel as CHAR)"] === "0") {
                     console.log("no starboard channel set")
@@ -375,7 +374,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                             con.query('SELECT * FROM Songs WHERE songName = "'+songname+'" AND songArtist = "'+songartist+'";', function (err, result, fields) {
                                                 //Chances are. It 100% will be now. So it adds it to your Listening History
                                                 var datetimePre = new Date();
-                                                var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetimePre.toISOString().slice(0, 19).replace('T', ' '))+'");'
+                                                var datetime = new Date(datetimePre.getTime() - (datetimePre.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ' ')
+                                                var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetime)+'");'
                                                 con.query(sql, function (err, result) {
                                                 if (err) throw err;
                                                 //added!
