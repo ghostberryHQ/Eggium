@@ -130,59 +130,70 @@ client.on('messageReactionAdd', (reaction, user) => {
 client.on("messageCreate", async (message) => {
     if(message.author.bot) return;
     if(message.channel.type === "dm") return;
-
-    //console.log(message.content)
-
-    if(message.content.includes("morb")) {
-        message.channel.send("Its morbin' time!\nhttps://cdn.discordapp.com/attachments/848538050233237594/977839127682744330/full-1.webm");
-    }
+    // if(message.content.includes("morb")) {
+    //     message.channel.send("Its morbin' time!\nhttps://cdn.discordapp.com/attachments/848538050233237594/977839127682744330/full-1.webm");
+    // }
 
     if(message.content.includes("http")) {
-
+        var doesWantURLShortened
+        var doesWantUniversalMusicLinks
         let initUrl = message.content
-        
         const matches = initUrl.match(/\bhttps?:\/\/\S+/gi);
         if(matches === null || matches === undefined) return;
         console.log(matches)
         var urlToShorten = matches[0];
         let url = new URL(matches);
-
-        if(urlToShorten.includes("spotify.com") && urlToShorten.includes("track")) {
-                console.log("Spotify link detected")
-                getLinks({ url: urlToShorten })
-                .then(response => {
-                    Object.entries(response.linksByPlatform)
-                message.channel.send("Your Spotify link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
-            })
-        } else if(urlToShorten.includes("music.apple.com") && urlToShorten.includes("album")) {
-                console.log("Apple Music link detected")
-                getLinks({ url: urlToShorten })
-                .then(response => {
-                    Object.entries(response.linksByPlatform)
-                message.channel.send("Your Apple Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
-            })
-        } else if(urlToShorten.includes("music.amazon.com") && urlToShorten.includes("albums")) {
-                console.log("Amazon Music link detected")
-                getLinks({ url: urlToShorten })
-                .then(response => {
-                    Object.entries(response.linksByPlatform)
-                message.channel.send("Your Amazon Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
-            })
-        } else if(urlToShorten.includes("music.youtube.com") && urlToShorten.includes("watch")) {
-                console.log("Youtube Music link detected")
-                getLinks({ url: urlToShorten })
-                .then(response => {
-                    Object.entries(response.linksByPlatform)
-                message.channel.send("Your Youtube Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
-            })
-        } else {
-            if(url.search == "") {
-                console.log("no need to shorten link")
+        con.query('select * from Servers WHERE serverID = "'+message.guildId+'";', function (err, result, fields) {
+            console.log(message.guildId)
+            console.log(result[0])
+            doesWantURLShortened = result[0].shortenLinks;
+            doesWantUniversalMusicLinks = result[0].convertSongLinks;
+            console.log("set")
+        });
+        setTimeout(function() {
+            if(urlToShorten.includes("spotify.com") && urlToShorten.includes("track")) {
+                    console.log("Spotify link detected")
+                    if(doesWantUniversalMusicLinks === 0) return;
+                    getLinks({ url: urlToShorten })
+                    .then(response => {
+                        Object.entries(response.linksByPlatform)
+                    message.channel.send("Your Spotify link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+                })
+            } else if(urlToShorten.includes("music.apple.com") && urlToShorten.includes("album")) {
+                    console.log("Apple Music link detected")
+                    if(doesWantUniversalMusicLinks === 0) return;
+                    getLinks({ url: urlToShorten })
+                    .then(response => {
+                        Object.entries(response.linksByPlatform)
+                    message.channel.send("Your Apple Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+                })
+            } else if(urlToShorten.includes("music.amazon.com") && urlToShorten.includes("albums")) {
+                    console.log("Amazon Music link detected")
+                    if(doesWantUniversalMusicLinks === 0) return;
+                    getLinks({ url: urlToShorten })
+                    .then(response => {
+                        Object.entries(response.linksByPlatform)
+                    message.channel.send("Your Amazon Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+                })
+            } else if(urlToShorten.includes("music.youtube.com") && urlToShorten.includes("watch")) {
+                    console.log("Youtube Music link detected")
+                    if(doesWantUniversalMusicLinks === 0) return;
+                    getLinks({ url: urlToShorten })
+                    .then(response => {
+                        Object.entries(response.linksByPlatform)
+                    message.channel.send("Your Youtube Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
+                })
             } else {
-                var shortenedLink = urlToShorten.replace(url.search,"");
-                message.channel.send("I attempted to shorten your link. Here you go!\n"+shortenedLink);
+                if(doesWantURLShortened === 0) return;
+                if(url.search == "") {
+                    console.log("no need to shorten link")
+                } else {
+                    var shortenedLink = urlToShorten.replace(url.search,"");
+                    message.channel.send("I attempted to shorten your link. Here you go!\n"+shortenedLink);
+                    console.log("shortened")
+                }
             }
-        }
+        }, 300);
 
     }
 })
