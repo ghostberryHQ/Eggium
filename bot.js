@@ -321,7 +321,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                 songname = activity.details;
                 songartist = activity.state;
             }
-
+            songname = songname.replaceAll('"', '')
+            songartist = songartist.replaceAll('"', '')
             //Checks if you have an Eggium Profile
             con.query('select * from Users WHERE discordID = '+"'"+newPresence.user.id+"'"+';', function (err, result, fields) {
                 if(result === undefined || result === null || result.length === 0) {
@@ -389,7 +390,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
 
                                         //So we'll just insert it into your listening history
                                         var datetimePre = new Date();
-                                        var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetimePre.toISOString().slice(0, 19).replace('T', ' '))+'");'
+                                        var datetime = new Date(datetimePre.getTime() - (datetimePre.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ' ')
+                                        var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetime)+'");'
                                         con.query(sql, function (err, result) {
                                         if (err) throw err;
                                         //did it!

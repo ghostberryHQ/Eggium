@@ -35,7 +35,7 @@ module.exports = {
                 {
                     name: 'kangaroo', 
                     value: 'kangaroo',
-                },)
+                })
                 .setRequired(true)),
     async execute(interaction) {
 
