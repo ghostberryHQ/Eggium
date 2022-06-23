@@ -146,6 +146,7 @@ client.on("messageCreate", async (message) => {
         con.query('select * from Servers WHERE serverID = "'+message.guildId+'";', function (err, result, fields) {
             console.log(message.guildId)
             console.log(result[0])
+            if(result === undefined || result === null || result.length === 0) return;
             doesWantURLShortened = result[0].shortenLinks;
             doesWantUniversalMusicLinks = result[0].convertSongLinks;
             console.log("set")
