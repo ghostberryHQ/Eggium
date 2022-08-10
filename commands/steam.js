@@ -14,7 +14,7 @@ module.exports = {
         .addStringOption(option =>
             option.setName('data')
                 .setDescription('The type of data you would like to recieve')
-                .addChoices({name: 'Recently Played',  value: 'recentlyplayed',})
+                .addChoices({name: 'Recently Played',  value: 'recentlyplayed'}, {name: 'User Info',  value: 'userinfo'})
                 .setRequired(true))
         .addUserOption((option) =>
             option.setName("username")
@@ -64,6 +64,37 @@ module.exports = {
                         console.log(reason)
                     });
 
+                }
+            });
+        } else if (dataType == 'userinfo') {
+            con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
+                if(result === undefined || result === null || result.length === 0) {
+                    const embed = new MessageEmbed()
+                    .setTitle('Recently Played for - ' + user.username)
+                    .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
+                    .setDescription('It looks like the user you are looking for does not have an Eggium Profile. Please encourage them to make one!');
+                    embed.setFooter({text: "Eggium - Tanner Approved"})
+                    .setTimestamp();
+                    interaction.reply({ embeds: [embed] , ephemeral: true});
+                } else {
+                    var steamLevel;
+                    var steamBans;
+                    var steamGames;
+                    var steamSummary;
+                    steam.getUserLevel(result[0]["CAST(steamID as CHAR)"]).then(level => { steamLevel = level;});
+                    steam.getUserBans(result[0]["CAST(steamID as CHAR)"]).then(bans => {steamBans = bans;});
+                    steam.getUserOwnedGames(result[0]["CAST(steamID as CHAR)"]).then(games => {steamGames = games});
+                    steam.getUserSummary(result[0]["CAST(steamID as CHAR)"]).then(summary => {steamSummary = summary;});
+                    setTimeout(function() {
+                        const embed = new MessageEmbed()
+                            .setTitle(`Recently Played for - ${steamSummary.nickname}`)
+                            .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
+                            .setDescription(`Level: ${steamLevel}\nVAC Bans: ${steamBans.vacBans} | Game Bans: ${steamBans.gameBans}\nGames Owned: ${steamGames.length}`)
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        //send embed
+                        interaction.reply({ embeds: [embed] , ephemeral: true});
+                    }, 300);
                 }
             });
         }

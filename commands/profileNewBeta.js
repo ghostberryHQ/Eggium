@@ -45,7 +45,11 @@ module.exports = {
               interaction.reply({ embeds: [embed], ephemeral: true });
             } else {
               var discordName = result[0].discordName;
-              var steamID = result[0].steamID;
+              var steamID;
+              con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
+                console.log(result[0]['CAST(steamID as CHAR)'])
+                steamID = result[0]['CAST(steamID as CHAR)']
+              })
               var steamName = result[0].steamName;
               var dateObj = new Date(result[0].dateRegistered);
               con.query("SELECT * FROM ListeningHistory WHERE discordID = "+ user.id.toString() + " ORDER BY listenedTime DESC"+ ";", function (err, result, fields) {

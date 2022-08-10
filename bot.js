@@ -4,7 +4,7 @@ const client = new Discord.Client(({
     intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS', 'GUILD_MESSAGE_REACTIONS', 'GUILD_PRESENCES', 'GUILD_VOICE_STATES'],
     partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
 }));
-const config = require('./config.json')
+const config = require('./dev.json')
 const token = config.token;
 const guild_id = config.guild_id;
 const { Collection, MessageEmbed } = require('discord.js');
@@ -422,6 +422,21 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     });
 });
 
+function handleDisconnect() {
+    con.connect(function(err) {
+        if (err) throw err;
+        console.log("Connected!");
+    });
+    con.on("error", function(err) {
+        console.log("db error", err);
+        if (err.code === "PROTOCOL_CONNECTION_LOST") {
+          handleDisconnect();
+        } else {
+          throw err;
+        }
+      });
+}
+
 client.once('ready', () => {
     console.log('The battle is now. Eggium Version: ' + config.eggium_version);
     // Registering the commands in the client
@@ -430,7 +445,14 @@ client.once('ready', () => {
         if (err) throw err;
         console.log("Connected!");
     });
-
+    con.on("error", function(err) {
+        console.log("db error", err);
+        if (err.code === "PROTOCOL_CONNECTION_LOST") {
+          handleDisconnect();
+        } else {
+          throw err;
+        }
+      });
 
     const CLIENT_ID = client.user.id;
     const rest = new REST({

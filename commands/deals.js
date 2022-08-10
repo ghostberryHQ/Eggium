@@ -217,7 +217,7 @@ module.exports = {
                         text: "Eggium - Tanner Approved"
                     })
                     .setTimestamp();
-                interaction.editReply({ embeds: [embed]});
+                interaction.editReply({ embeds: [embed], components: []});
             } else {
 
 
@@ -259,7 +259,7 @@ module.exports = {
                         text: "Eggium - Tanner Approved"
                     })
                     .setTimestamp();
-                interaction.editReply({ embeds: [embed]});
+                interaction.editReply({ embeds: [embed], components: []});
             }
         });
     }

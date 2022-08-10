@@ -6,7 +6,7 @@
     "deep-object-diff": "^1.1.7",
     "discord-command-cooldown": "^1.0.8",
     "discord-economy-super": "^1.5.2",
-    "discord.js": "^13.8.0",
+    "discord.js": "13.9.0",
     "http": "^0.0.1-security",
     "https": "^1.0.0",
     "image-to-base64": "^2.2.0",
