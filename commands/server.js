@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ButtonStyle  } = require('discord.js');
 var myModule = require('../bot.js');
 var con = myModule.con;
 var selectType;
@@ -32,8 +32,8 @@ module.exports = {
             }
         })
         setTimeout(function() {
-            channelRows = new MessageActionRow().addComponents(
-                new MessageSelectMenu()
+            channelRows = new ActionRowBuilder().addComponents(
+                new SelectMenuBuilder()
                     .setCustomId('selectChannel')
                     .setPlaceholder('Nothing selected')
                     .addOptions(channelsArr));
@@ -58,7 +58,7 @@ module.exports = {
                     if(result[0].convertSongLinks === 0) { convertSongLinksInEmbed = "Off" } else { convertSongLinksInEmbed = "On" };
 
 
-                    const embed = new MessageEmbed()
+                    const embed = new EmbedBuilder()
                     .setTitle(`Eggium Server Settings - ${interaction.guild.name}`)
                     .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
                     .setDescription(
@@ -78,7 +78,7 @@ module.exports = {
                     con.query("SELECT * FROM Servers WHERE serverID = '"+interaction.guild.id+"';", function (err, result, fields) {
                         if(result[0] === undefined || result[0] === null) {
                             con.query('INSERT INTO Servers VALUES ("'+interaction.guild.id+'", "0", "(null)", "(null)", "0", "1", "1");');
-                            const embed = new MessageEmbed()
+                            const embed = new EmbedBuilder()
                             .setTitle(`Eggium Server Settings - ${interaction.guild.name}`)
                             .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
                             .setDescription('Congrats! Your server is now setup in Eggium Servers. Use "/server settings change" to change the settings!');
@@ -94,41 +94,41 @@ module.exports = {
                     var buttonTypeStarboardChannel;
                     var buttonTypeWelcomeChannel;
                     if(result[0].shortenLinks === 0) {
-                        buttonTypeShortenLinks = 'DANGER'
+                        buttonTypeShortenLinks = ButtonStyle.Danger
                     } else if(result[0].shortenLinks === 1) {
-                        buttonTypeShortenLinks = 'SUCCESS'
+                        buttonTypeShortenLinks = ButtonStyle.Success
                     }
                     if(result[0].convertSongLinks === 0) {
-                        buttonTypeUniversalSongLinks = 'DANGER'
+                        buttonTypeUniversalSongLinks = ButtonStyle.Danger
                     } else if(result[0].convertSongLinks === 1) {
-                        buttonTypeUniversalSongLinks = 'SUCCESS'
+                        buttonTypeUniversalSongLinks = ButtonStyle.Success
                     }
                     if(result[0].starboardChannel === 0 || result[0].starboardChannel === "(null)" || result[0].starboardChannel === "0") {
-                        buttonTypeStarboardChannel = 'DANGER'
+                        buttonTypeStarboardChannel = ButtonStyle.Danger
                     } else {
-                        buttonTypeStarboardChannel = 'SUCCESS'
+                        buttonTypeStarboardChannel = ButtonStyle.Success
                     }
                     if(result[0].welcomeChannel === 0 || result[0].welcomeChannel === "(null)" || result[0].welcomeChannel === "0") {
-                        buttonTypeWelcomeChannel = 'DANGER'
+                        buttonTypeWelcomeChannel = ButtonStyle.Danger
                     } else {
-                        buttonTypeWelcomeChannel = 'SUCCESS'
+                        buttonTypeWelcomeChannel = ButtonStyle.Success
                     }
                     setTimeout(function() {
-                        const row = new MessageActionRow()
+                        const row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('shortenlinks')
                                 .setLabel('Shorten Links')
                                 .setStyle(buttonTypeShortenLinks),
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('universalsonglinks')
                                 .setLabel('Universal Song Links')
                                 .setStyle(buttonTypeUniversalSongLinks),
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('welcomeChannelButton')
                                 .setLabel('Welcome Channel')
                                 .setStyle(buttonTypeWelcomeChannel),
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('starboardChannelButton')
                                 .setLabel('Starboard Channel')
                                 .setStyle(buttonTypeStarboardChannel),

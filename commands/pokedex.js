@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const https = require('https');
 
 function capitalizeFirstLetter(string) {
@@ -37,7 +37,7 @@ module.exports = {
                         evoLine = data.family.evolutionLine.join(' -> ')
                     }
 
-                    const embed = new MessageEmbed()
+                    const embed = new EmbedBuilder()
                         .setTitle('Pokedex Entry - #' + `${data.id} | ${capitalizeFirstLetter(data.name)}`)
                         .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                         .setThumbnail(data.sprites.animated)

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,7 +16,7 @@ module.exports = {
         var hours = Math.floor(uptime / 3600) % 24;
         //convert uptime to days
         var days = Math.floor(uptime / 86400);
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
         .setTitle('Uptime')
         .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
         .setDescription('Days: ' + days + '\nHours: ' + hours + '\nMinutes: ' + minutes + '\nSeconds: ' + seconds)

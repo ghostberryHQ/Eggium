@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 var myModule = require('../bot.js');
 
 var con = myModule.con;
@@ -17,7 +17,7 @@ module.exports = {
         con.query("SELECT * FROM Quests WHERE gameName = " + "'" + game_name + "'" + ";", function (err, result, fields) {
           if (err) throw err;
           if(result === undefined || result === null || result.length === 0) {
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder()
             .setTitle("Eggium Achievements - " + game_name)
             .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
             .setDescription("That game is not in the achievements beta. Feel free to request it!");
@@ -32,7 +32,7 @@ module.exports = {
               availableQuestTitles.push(`${result[i].questName} - ${result[i].questDescription}`);
             }
             var description = availableQuestTitles.join('\r\n');
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder()
             .setTitle("Eggium Achievements - " + game_name)
             .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
             //.setThumbnail(image of the game?)

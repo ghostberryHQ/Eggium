@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
-const { MessageEmbed, MessageActionRow, MessageButton, Message } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, Message, ButtonStyle, ButtonBuilder } = require('discord.js');
 const { IsThereAnyDealApi } = require('itad-api-client-ts');
 const config = require('../config.json');
 const itadApi = new IsThereAnyDealApi(config.itadApiKey);
@@ -45,18 +45,18 @@ module.exports = {
 
 
         if(matchingDeals.list.length == 0) {
-            buttons = new MessageButton()
+            buttons = new ButtonBuilder()
                         .setCustomId('0')
                         .setLabel("No Game Found")
-                        .setStyle('DANGER')
+                        .setStyle(ButtonStyle.Danger)
                         .setDisabled(true);
                     allButtons.push(buttons);
         } else {
             for (var i = 0; i < gamesFound.length; i++) {
-                buttons = new MessageButton()
+                buttons = new ButtonBuilder()
                         .setCustomId(String(i))
                         .setLabel(gamesFound[i])
-                        .setStyle('PRIMARY')
+                        .setStyle(ButtonStyle.Primary)
                 console.log("BUTTON LABEL: "+buttons.label)
                 if(i > 4) {
                     console.log("not adding")
@@ -71,11 +71,11 @@ module.exports = {
             }
         }
 
-         var row = new MessageActionRow()
+         var row = new ActionRowBuilder()
              .addComponents(allButtons);
     
         
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
             .setTitle('Game Deals - ' + game_name)
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             //.setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')
@@ -200,7 +200,7 @@ module.exports = {
 
 
             if(filtered.length == 1) {
-                const embed = new MessageEmbed()
+                const embed = new EmbedBuilder()
                     .setTitle('Game Deals - ' + filtered[0].title)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                     //.setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')
@@ -242,7 +242,7 @@ module.exports = {
                 
                 //console.log(filtered2);
 
-                const embed = new MessageEmbed()
+                const embed = new EmbedBuilder()
                     .setTitle('Game Deals - ' + filtered2[0].title)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                     //.setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ContextMenuInteraction, MessageEmbed } = require('discord.js');
+const { ContextMenuInteraction, EmbedBuilder } = require('discord.js');
 
 //Later, port this to a Context Menu Interaction
 
@@ -17,7 +17,7 @@ module.exports = {
         var username = interaction.options.get("username")
         console.log(username.user.username)
 
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
             .setTitle('Avatar - ' + username.user.username)
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             .setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.jpeg')

@@ -10,24 +10,26 @@ module.exports = {
                 .setRequired(true)),
     async execute(interaction) {
         var emoji = interaction.options.getString("emoji");
+        console.log(emoji)
         var arr = emoji.match(/<a:.+?:\d+>|<:.+?:\d+>/g);
+        console.log(arr.length)
         if(arr.length > 1) {
             interaction.reply({content: 'Look man. One emoji at a time. Dont want to be caught by the police now. Do ya?', ephemeral: true});
         } else {
             var emoteIDToSteal = arr[0].match(/\d+/g)[0];
             var emoteNameToSteal = arr[0].match(/(?<=:)[a-zA-Z1-9]+(?=:)/g)[0];
             if(emoji.toString().includes('<a:')) {
-                interaction.guild.emojis.create(`https://cdn.discordapp.com/emojis/${emoteIDToSteal}.gif?size=44&quality=lossless`, emoteNameToSteal).then(emote => {
+                console.log("gif" + `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.gif?size=44&quality=lossless`);
+                interaction.guild.emojis.create({attachment: `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.gif?size=44&quality=lossless`, name: emoteNameToSteal}).then(emote => {
                     //console.log(emote)
-                    console.log("gif");
                     interaction.reply({ content: `<a:${emote.name}:${emote.id}> | Stole "${emote.name}"` , ephemeral: true});
-                });
+                }).catch(console.error);
             } else {
-                interaction.guild.emojis.create(`https://cdn.discordapp.com/emojis/${emoteIDToSteal}.webp?size=44&quality=lossless`, emoteNameToSteal).then(emote => {
+                console.log("non-gif " + `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.webp?size=44&quality=lossless`);
+                interaction.guild.emojis.create({attachment: `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.webp?size=44&quality=lossless`, name: emoteNameToSteal}).then(emote => {
                     //console.log(emote)
-                    console.log("non-gif");
                     interaction.reply({ content: `<:${emote.name}:${emote.id}> | Stole "${emote.name}"` , ephemeral: true});
-                });
+                }).catch(console.error);
             }
 
             //const ayy = client.emojis.cache.find(emoji => emoji.name === "ayy");

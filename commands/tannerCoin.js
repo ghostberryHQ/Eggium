@@ -10,7 +10,7 @@ const robCommandCooldown = new CommandCooldown('robTannerCoin', ms('5h')); // Yo
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('tannercoin')
-        .setDescription('Replies with pong')
+        .setDescription('Tannercoin based commands')
         .addSubcommand(subcommand =>
             subcommand
                 .setName('claim')

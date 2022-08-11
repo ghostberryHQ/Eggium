@@ -1,13 +1,14 @@
 //setup Discord Js
 const Discord = require('discord.js');
-const client = new Discord.Client(({
-    intents: [ 'GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS', 'GUILD_MESSAGE_REACTIONS', 'GUILD_PRESENCES', 'GUILD_VOICE_STATES'],
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+const { Collection, EmbedBuilder, Client, GatewayIntentBits, Partials, InteractionType } = require('discord.js');
+const client = new Client(({
+    intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildVoiceStates],
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 }));
-const config = require('./dev.json')
+const config = require('./config.json')
+var pjson = require('./package.json');
 const token = config.token;
 const guild_id = config.guild_id;
-const { Collection, MessageEmbed } = require('discord.js');
 const fs = require('fs');
 const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
@@ -26,7 +27,6 @@ var con = mysql.createConnection({
 
 const myApiKey = config.SONGLINK_API_KEY
 const getLinks = songlink.getClient({ apiKey: myApiKey });
-const { diff, addedDiff, deletedDiff, updatedDiff, detailedDiff } =  require('deep-object-diff');
 
 exports.con = con;
 setInterval(function () {
@@ -47,7 +47,7 @@ client.on('interactionCreate', async interaction => {
         return /^[0-9]+$/.test(str);
     }
 
-    if (interaction.isModalSubmit()) {
+    if (interaction.type === InteractionType.ModalSubmit) {
         console.log()
         // Get the data entered by the user
         const steamIdentifier = interaction.fields.getTextInputValue('steamIdentifier');
@@ -87,7 +87,7 @@ client.on('interactionCreate', async interaction => {
         }, 500)
     }
 
-    if (!interaction.isCommand()) return;
+    if (!interaction.type === InteractionType.ApplicationCommand) return;
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
     try {
@@ -104,7 +104,7 @@ client.on('messageReactionAdd', (reaction, user) => {
         const userWhoSend = reaction.message.author;
         if(stars === 5) {
             //make an embed
-            const embed = new Discord.MessageEmbed()
+            const embed = new Discord.EmbedBuilder()
             .setTitle('⭐ Starboard Message ⭐')
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             .setThumbnail('https://cdn.discordapp.com/avatars/'+userWhoSend.id+'/'+userWhoSend.avatar+'.jpeg')
@@ -245,7 +245,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         if(newPresence.activities[i] != undefined && newPresence.activities[i].state != undefined && newPresence.activities[i].state != null && newPresence.activities[i].state.toLowerCase() === "idling") return;
     }
     newPresence.activities.forEach((activity) => {
-    if (activity.type == 'PLAYING' && activity.name != "Apple Music" && activity.name != "Cider") {
+    if (activity.type == 0 && activity.name != "Apple Music" && activity.name != "Cider") {
         if(newPresence.user.bot) return;
         if (theFireTwicePatch.includes(newPresence.user.id)){
             //console.log("user is on theFireTwicePatch cooldown")
@@ -255,9 +255,16 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         if(activity.timestamps === null | activity.timestamps === undefined) {
             console.log("No defined start time | " + activity.name)
         } else {
+            var activityTypeFixerUpper;
+            if(activity.type === 0) activityTypeFixerUpper="PLAYING";
+            if(activity.type === 1) activityTypeFixerUpper="STREAMING";
+            if(activity.type === 2) activityTypeFixerUpper="LISTENING";
+            if(activity.type === 3) activityTypeFixerUpper="WATCHING";
+            if(activity.type === 4) activityTypeFixerUpper="CUSTOM";
+            if(activity.type === 5) activityTypeFixerUpper="COMPETING";
             var timePlaying = timeAgo.format(new Date(activity.timestamps.start), 'mini');
-            console.log(`${newPresence.user.tag} is ${activity.type} ${activity.name}. They've been playing for ${timePlaying} | in ${newPresence.guild.name}`);
-            lastPresenceMessage = `${newPresence.user.tag} is ${activity.type} ${activity.name}. They've been playing for ${timePlaying}`
+            console.log(`${newPresence.user.tag} is ${activityTypeFixerUpper} ${activity.name}. They've been playing for ${timePlaying} | in ${newPresence.guild.name}`);
+            lastPresenceMessage = `${newPresence.user.tag} is ${activityTypeFixerUpper} ${activity.name}. They've been playing for ${timePlaying}`
             con.query('select * from Quests WHERE gameName = '+"'"+activity.name+"'"+';', function (err, result, fields) {
                 if(result === undefined || result === null || result.length === 0) {
                     console.log("No quest found for this activity")
@@ -289,7 +296,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                                                 if (err) throw err;
                                                                 console.log(`1 Quest inserted for ${newPresence.user.username}`);
                                                                 client.users.fetch(newPresence.userId).then(user => {
-                                                                    const embed = new MessageEmbed()
+                                                                    const embed = new EmbedBuilder()
                                                                     .setTitle("Eggium Achievements - " + activity.name)
                                                                     .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
                                                                     .setDescription(`You have completed the quest: ${questinfo.questName}`);
@@ -316,7 +323,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                 }
             });
         }
-    } else if(activity.type == 'LISTENING' || activity.name == "Apple Music") {
+    } else if(activity.type == 2 || activity.name == "Apple Music" || activity.name == "Cider") {
         if(newPresence.user.bot) return;
         if (theFireTwicePatchMusic.includes(newPresence.user.id)) return;
         theFireTwicePatcherMusic(newPresence.user.id);
@@ -438,7 +445,16 @@ function handleDisconnect() {
 }
 
 client.once('ready', () => {
-    console.log('The battle is now. Eggium Version: ' + config.eggium_version);
+    console.log('The battle is now.');
+    console.log(`Eggium Version: ${config.eggium_version} | Discord.js Version ${pjson.dependencies["discord.js"]}`)
+    client.user.setActivity(`with ${client.guilds.cache.size} different servers`)
+    // client.user.setPresence({
+    //     status: 'online',
+    //     activity: {
+    //         name: `over ${client.guilds.cache.size} different servers`,
+    //         type: 'WATCHING'
+    //     }
+    // });
     // Registering the commands in the client
 
     con.connect(function(err) {

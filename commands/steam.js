@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const SteamAPI = require('steamapi');
 const config = require('../config.json');
 const steam = new SteamAPI(config.steamAPIKey);
@@ -26,7 +26,7 @@ module.exports = {
                 //Input is a steam id
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
                 if(result === undefined || result === null || result.length === 0) {
-                    const embed = new MessageEmbed()
+                    const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                     .setDescription('It looks like the user you are looking for does not have an Eggium Profile. Please encourage them to make one!');
@@ -47,7 +47,7 @@ module.exports = {
                         }
                         steam.getUserSummary(result[0]["CAST(steamID as CHAR)"]).then(summary => {
                             console.log(games)
-                            const embed = new MessageEmbed()
+                            const embed = new EmbedBuilder()
                             .setTitle('Recently Played for - ' + summary.nickname)
                             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                             .setThumbnail(mostRecentlyPlayedGame.iconURL)
@@ -69,7 +69,7 @@ module.exports = {
         } else if (dataType == 'userinfo') {
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
                 if(result === undefined || result === null || result.length === 0) {
-                    const embed = new MessageEmbed()
+                    const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                     .setDescription('It looks like the user you are looking for does not have an Eggium Profile. Please encourage them to make one!');
@@ -86,7 +86,7 @@ module.exports = {
                     steam.getUserOwnedGames(result[0]["CAST(steamID as CHAR)"]).then(games => {steamGames = games});
                     steam.getUserSummary(result[0]["CAST(steamID as CHAR)"]).then(summary => {steamSummary = summary;});
                     setTimeout(function() {
-                        const embed = new MessageEmbed()
+                        const embed = new EmbedBuilder()
                             .setTitle(`Recently Played for - ${steamSummary.nickname}`)
                             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                             .setDescription(`Level: ${steamLevel}\nVAC Bans: ${steamBans.vacBans} | Game Bans: ${steamBans.gameBans}\nGames Owned: ${steamGames.length}`)

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, Collection, MessageActionRow, Modal, TextInputComponent  } = require("discord.js");
+const { EmbedBuilder, Collection, ActionRowBuilder, Modal, TextInputBuilder  } = require("discord.js");
 var mysql = require('mysql');
 const config = require('../config.json')
 var myModule = require('../bot.js');
@@ -34,7 +34,7 @@ module.exports = {
             console.log(result[0]);
             if(result[0] === undefined || result[0] === null) {
 
-              const embed = new MessageEmbed()
+              const embed = new EmbedBuilder()
                 .setTitle("Eggium Profile - " + user.username)
                 .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
                 .setDescription("User does not have an Eggium V2 profile.");
@@ -80,7 +80,7 @@ module.exports = {
                   //var dateRegistered = `${month}/${day}/${year}`;
                   var dateRegistered = `<t:${dateObj.getTime() / 1000}:D>`;
                   setTimeout(function() {
-                    const embed = new MessageEmbed()
+                    const embed = new EmbedBuilder()
                     .setTitle("Eggium Profile - " + discordName)
                     .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
                     .setDescription(
@@ -109,16 +109,16 @@ module.exports = {
               const modal = new Modal()
                   .setCustomId('profileCreation')
                   .setTitle('Eggium Profile Creation');
-              const steamIdentifierInput = new TextInputComponent()
+              const steamIdentifierInput = new TextInputBuilder()
                   .setCustomId('steamIdentifier')
                   .setLabel("Please enter your Steam Identifier")
                   .setStyle('SHORT');
-              const firstActionRow = new MessageActionRow().addComponents(steamIdentifierInput);
+              const firstActionRow = new ActionRowBuilder().addComponents(steamIdentifierInput);
               modal.addComponents(firstActionRow);
               interaction.showModal(modal);
             } else {
               //user exists
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder()
               .setTitle("Eggium Profile - " + user.username)
               .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
               //   .setThumbnail(mostRecentlyPlayedGame.iconURL)

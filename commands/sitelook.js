@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const https = require('https');
 const config = require('../config.json');
 
@@ -34,7 +34,7 @@ module.exports = {
                     var screenshot = json.screenshot;
                     var created_at = json.created_at;
                     //create embed
-                    const embed = new MessageEmbed()
+                    const embed = new EmbedBuilder()
                         .setTitle('Screenshot')
                         .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                         .setImage(screenshot)

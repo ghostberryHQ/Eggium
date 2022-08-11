@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ContextMenuInteraction, MessageEmbed } = require('discord.js');
+const { ContextMenuInteraction, EmbedBuilder } = require('discord.js');
 
 //Later, port this to a Context Menu Interaction
 
@@ -22,13 +22,18 @@ module.exports = {
         //get user's tag
         var tag = username.user.tag;
         //get user's nickname
-        var nickname = username.member.nickname;
+        var nickname;
+        if(username.member.nickname === null) {
+            nickname = "[not yet set]"
+        } else {
+            nickname = username.member.nickname;
+        }
         //get user's avatar
         var avatar = username.user.avatar;
         //get user's joined date
         var joined = new Date(username.member.joinedTimestamp);
 
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
             .setTitle('User Info - ' + username.user.username)
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
             .setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')

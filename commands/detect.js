@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const imageToBase64 = require('image-to-base64');
 const config = require('../config.json');
 var AWS = require('aws-sdk');
@@ -79,7 +79,7 @@ module.exports = {
                                         labels.push(label + ': ' + confidence);
                                     }
                                     //create embed
-                                    const embed = new MessageEmbed()
+                                    const embed = new EmbedBuilder()
     
                                     .setTitle('Detect')
                                     .setColor('#0099ff')
@@ -100,7 +100,7 @@ module.exports = {
                     .catch(
                         (error) => {
                             console.log(error); // Logs an error if there was one
-                            const embed = new MessageEmbed()
+                            const embed = new EmbedBuilder()
     
                             .setTitle('Detection Failed')
                             .setColor('#FA113D')
@@ -151,7 +151,7 @@ module.exports = {
                                     labels.push(label + ': ' + confidence);
                                 }
                                 //create embed
-                                const embed = new MessageEmbed()
+                                const embed = new EmbedBuilder()
 
                                 .setTitle('Detect')
                                 .setColor('#0099ff')
