@@ -2,7 +2,7 @@
 const Discord = require('discord.js');
 const { Collection, EmbedBuilder, Client, GatewayIntentBits, Partials, InteractionType } = require('discord.js');
 const client = new Client(({
-    intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildVoiceStates],
+    intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 }));
 const config = require('./config.json')
@@ -24,7 +24,6 @@ var con = mysql.createConnection({
     password: config.AWS_RDS_PASSWORD,
     database: config.AWS_RDS_DB_NAME
 });
-
 const myApiKey = config.SONGLINK_API_KEY
 const getLinks = songlink.getClient({ apiKey: myApiKey });
 
@@ -59,7 +58,10 @@ client.on('interactionCreate', async interaction => {
         var finalSteamID;
         var finalSteamName;
 
-        if(onlyNumbers(steamIdentifier)) {
+        if(steamIdentifier === null || steamIdentifier.length === 0 || !steamIdentifier || steamIdentifier === "") {
+            console.log("Not given")
+            finalSteamID = 0;
+        } else if(onlyNumbers(steamIdentifier)) {
             console.log("only numbers")
             finalSteamID = steamIdentifier;
             steam.getUserSummary(steamIdentifier).then(summary => {
@@ -444,18 +446,15 @@ function handleDisconnect() {
       });
 }
 
+function setEggiumsActivity(){
+    client.user.setActivity(`with ${client.guilds.cache.size} different servers`)
+    setTimeout(setEggiumsActivity, 5000);
+}
+
 client.once('ready', () => {
     console.log('The battle is now.');
     console.log(`Eggium Version: ${config.eggium_version} | Discord.js Version ${pjson.dependencies["discord.js"]}`)
-    client.user.setActivity(`with ${client.guilds.cache.size} different servers`)
-    // client.user.setPresence({
-    //     status: 'online',
-    //     activity: {
-    //         name: `over ${client.guilds.cache.size} different servers`,
-    //         type: 'WATCHING'
-    //     }
-    // });
-    // Registering the commands in the client
+    setEggiumsActivity();
 
     con.connect(function(err) {
         if (err) throw err;

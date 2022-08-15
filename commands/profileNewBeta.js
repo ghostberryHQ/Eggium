@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, Collection, ActionRowBuilder, Modal, TextInputBuilder  } = require("discord.js");
+const { EmbedBuilder, Collection, ActionRowBuilder, ModalBuilder, TextInputBuilder  } = require("discord.js");
 var mysql = require('mysql');
 const config = require('../config.json')
 var myModule = require('../bot.js');
@@ -11,17 +11,19 @@ module.exports = {
         .setName('profile')
         .setDescription('Pulls profile from Eggium profile V2 server (limited access)')
         .addSubcommand((subcommand) =>
-        subcommand
-          .setName("view")
-          .setDescription("View an Eggium Profile")
-          .addUserOption((option) =>
-            option.setName("profile").setDescription("The user")
-          ))
-          .addSubcommand((subcommand) =>
-            subcommand.setName("create").setDescription("Create an Eggium V2 Profile")
-          ),
+          subcommand.setName("view").setDescription("View an Eggium Profile").addUserOption((option) => option.setName("profile").setDescription("The user")))
+        .addSubcommand((subcommand) =>
+          subcommand.setName("create").setDescription("Create an Eggium V2 Profile"))
+        .addSubcommand((subcommand) =>
+          subcommand.setName("link").setDescription("Link an app to your Eggium Profile").addStringOption(option =>
+            option.setName('services')
+                .setDescription("The service you'd like to connect your Eggium account to")
+                .addChoices({
+                    name: 'Steam', 
+                    value: 'steam',
+                })
+                .setRequired(true)),),
     async execute(interaction) {
-
       if (interaction.options.getSubcommand() === "view") {
         var user;
         if(interaction.options.getUser("profile") === undefined || interaction.options.getUser("profile") === null) {
@@ -106,13 +108,15 @@ module.exports = {
             if (err) throw err;
             if(result[0] === undefined || result[0] === null) {
               console.log("User not found");
-              const modal = new Modal()
+              const modal = new ModalBuilder()
                   .setCustomId('profileCreation')
                   .setTitle('Eggium Profile Creation');
               const steamIdentifierInput = new TextInputBuilder()
                   .setCustomId('steamIdentifier')
                   .setLabel("Please enter your Steam Identifier")
-                  .setStyle('SHORT');
+                  .setPlaceholder("ID found in the URL of your Steam Profile (not required)")
+                  .setRequired(false)
+                  .setStyle('Short');
               const firstActionRow = new ActionRowBuilder().addComponents(steamIdentifierInput);
               modal.addComponents(firstActionRow);
               interaction.showModal(modal);
@@ -121,15 +125,24 @@ module.exports = {
             const embed = new EmbedBuilder()
               .setTitle("Eggium Profile - " + user.username)
               .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-              //   .setThumbnail(mostRecentlyPlayedGame.iconURL)
               .setDescription("You already have an Eggium V2 Profile. View it with /profile view");
             embed.setFooter({text: "Eggium - Tanner Approved",})
               .setTimestamp();
             //send embed
             interaction.reply({ embeds: [embed], ephemeral: true });
             }
-
           });
+      }else if (interaction.options.getSubcommand() === "link") {
+        var user = interaction.user;
+        var service = interaction.options.getString('services');
+        const embed = new EmbedBuilder()
+          .setTitle(`Eggium Profile Linking - ${user.username}`)
+          .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+          .setDescription(`Linking for ${service} is coming soon!`)
+          .setFooter({text: "Eggium - Tanner Approved"})
+          .setTimestamp();
+        //send embed
+        interaction.reply({ embeds: [embed], ephemeral: true });
       }
     }
 };

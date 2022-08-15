@@ -25,6 +25,15 @@ module.exports = {
         if(dataType == 'recentlyplayed') {
                 //Input is a steam id
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
+                if(result[0]["CAST(steamID as CHAR)"] === "0" || result[0]["CAST(steamID as CHAR)"] === 0) {
+                    const embed = new EmbedBuilder()
+                        .setTitle('Steam account not linked to their Eggium Profile')
+                        .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
+                        .setDescription('It looks like the user you are looking for does not have their Steam account linked to their Eggium profile. Ask them to!');
+                        embed.setFooter({text: "Eggium - Tanner Approved"})
+                        .setTimestamp();
+                    interaction.reply({ embeds: [embed] , ephemeral: true});
+                } else
                 if(result === undefined || result === null || result.length === 0) {
                     const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
@@ -68,6 +77,15 @@ module.exports = {
             });
         } else if (dataType == 'userinfo') {
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
+                if(result[0]["CAST(steamID as CHAR)"] === "0" || result[0]["CAST(steamID as CHAR)"] === 0) {
+                    const embed = new EmbedBuilder()
+                        .setTitle('Steam account not linked to their Eggium Profile')
+                        .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
+                        .setDescription('It looks like the user you are looking for does not have their Steam account linked to their Eggium profile. Ask them to!');
+                        embed.setFooter({text: "Eggium - Tanner Approved"})
+                        .setTimestamp();
+                    interaction.reply({ embeds: [embed] , ephemeral: true});
+                } else
                 if(result === undefined || result === null || result.length === 0) {
                     const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
