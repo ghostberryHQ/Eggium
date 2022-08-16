@@ -21,23 +21,14 @@ module.exports = {
             if(emoji.toString().includes('<a:')) {
                 console.log("gif" + `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.gif?size=44&quality=lossless`);
                 interaction.guild.emojis.create({attachment: `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.gif?size=44&quality=lossless`, name: emoteNameToSteal}).then(emote => {
-                    //console.log(emote)
                     interaction.reply({ content: `<a:${emote.name}:${emote.id}> | Stole "${emote.name}"` , ephemeral: true});
                 }).catch(console.error);
             } else {
                 console.log("non-gif " + `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.webp?size=44&quality=lossless`);
                 interaction.guild.emojis.create({attachment: `https://cdn.discordapp.com/emojis/${emoteIDToSteal}.webp?size=44&quality=lossless`, name: emoteNameToSteal}).then(emote => {
-                    //console.log(emote)
                     interaction.reply({ content: `<:${emote.name}:${emote.id}> | Stole "${emote.name}"` , ephemeral: true});
                 }).catch(console.error);
             }
-
-            //const ayy = client.emojis.cache.find(emoji => emoji.name === "ayy");
-            // console.log(interaction.guild.emojis.cache)
-            // var emojiFromSteal = interaction.guild.emojis.cache.find(emoji => emoji.name === 'froogyLove')
-            // console.log(emoteIDToSteal);
-            // console.log(emoteNameToSteal);
-            // console.log(emojiFromSteal);
         }
     }
 };

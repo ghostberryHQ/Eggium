@@ -9,7 +9,7 @@ module.exports = {
         const embed = new EmbedBuilder()
         .setTitle('Source Code')
         .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-        .setDescription('Main Source Code: https://github.com/spjoes/Eggium\nUpdate JSON: https://gist.github.com/spjoes/ce745c5ebe201c005067472f5c8cf876')
+        .setDescription('Main Source Code: https://github.com/spjoes/Eggium')
         embed.setFooter({
             text: "Eggium - Tanner Approved"
         })

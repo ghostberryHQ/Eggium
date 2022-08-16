@@ -23,7 +23,6 @@ module.exports = {
         var dataType = interaction.options.getString("data");
         var user = interaction.options.getUser("username");
         if(dataType == 'recentlyplayed') {
-                //Input is a steam id
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
                 if(result[0]["CAST(steamID as CHAR)"] === "0" || result[0]["CAST(steamID as CHAR)"] === 0) {
                     const embed = new EmbedBuilder()

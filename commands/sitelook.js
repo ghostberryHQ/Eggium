@@ -12,7 +12,7 @@ module.exports = {
                 .setDescription('The site you would like Eggium to explore')
                 .setRequired(true)),
     async execute(interaction) {
-        interaction.reply('Searching Mr. Tanners Brian...')
+        interaction.reply("Searching Eggium's Brian...")
         var searchTerm = interaction.options.getString("site");
             //get screenshot api key
             var apiKey = config.sitelookKey;
