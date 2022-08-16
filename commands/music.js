@@ -32,21 +32,58 @@ async function getInfoFromURL(interaction, track, voice_channel){
         playing = queue[interaction.guild.id][voice_channel.channelId].playing;
         console.log(playing);
         if(playing == false){
-            JoinChanNew(voice_channel, track, 0.25, interaction, voice_channel);
-            let yt_info = await play.video_info(track).then(info => {
+            if(track.includes("youtube.com")) {
+                JoinChanNew(voice_channel, track, 0.25, interaction, voice_channel);
+                let yt_info = await play.video_info(track).then(info => {
+                    const embed = new EmbedBuilder()
+                        .setTitle("Eggium Music - Play")
+                        .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                        .setDescription(`Now Playing "${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")}" in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
+                        .setFooter({text: "Eggium - Tanner Approved"})
+                        .setTimestamp();
+                    interaction.reply({ embeds: [embed], ephemeral: false });
+                })
+            } else{
+                let yt_info = await play.search(track, {
+                    limit: 1
+                })
+                console.log(yt_info[0])
+                JoinChanNew(voice_channel, yt_info[0].url, 0.25, interaction, voice_channel);
                 const embed = new EmbedBuilder()
                     .setTitle("Eggium Music - Play")
                     .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                    .setDescription(`Now Playing "${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")}" in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
+                    .setDescription(`Now Playing "${yt_info[0].title.replaceAll(`"`, "").replaceAll(`'`, "")}" in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-            })
+            }
         } else {
-            let yt_info = await play.video_info(track).then(info => {
+            if(track.includes("youtube.com")) {
+                let yt_info = await play.video_info(track).then(info => {
+                    var songAddition = {
+                        "link": track,
+                        "title": info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, ""),
+                        "requester": interaction.member.user.id,
+                    }
+                    //add song to queue
+                    queue[interaction.guild.id][voice_channel.channelId].queue.push(songAddition);
+                    console.log(queue)
+                    fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue));
+                    const embed = new EmbedBuilder()
+                        .setTitle("Eggium Music - Added to Queue")
+                        .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                        .setDescription(`Added ${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")} to queue!` + `\nRequested by: <@${interaction.member.user.id}>`)
+                        .setFooter({text: "Eggium - Tanner Approved"})
+                        .setTimestamp();
+                    interaction.reply({ embeds: [embed], ephemeral: false });
+                });
+            } else {
+                let yt_info = await play.search(track, {
+                    limit: 1
+                })
                 var songAddition = {
-                    "link": track,
-                    "title": info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, ""),
+                    "link": yt_info[0].url,
+                    "title": yt_info[0].title.replaceAll(`"`, "").replaceAll(`'`, ""),
                     "requester": interaction.member.user.id,
                 }
                 //add song to queue
@@ -56,14 +93,16 @@ async function getInfoFromURL(interaction, track, voice_channel){
                 const embed = new EmbedBuilder()
                     .setTitle("Eggium Music - Added to Queue")
                     .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                    .setDescription(`Added ${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")} to queue!` + `\nRequested by: <@${interaction.member.user.id}>`)
+                    .setDescription(`Added ${yt_info[0].title.replaceAll(`"`, "").replaceAll(`'`, "")} to queue!` + `\nRequested by: <@${interaction.member.user.id}>`)
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-            });
+            }
         }
     }
 }
+
+let player;
 
 async function JoinChanNew(channel, track, volume, interaction, voice_channel){
     const connection = joinVoiceChannel({
@@ -72,38 +111,30 @@ async function JoinChanNew(channel, track, volume, interaction, voice_channel){
         adapterCreator: channel.guild.voiceAdapterCreator,
     })
     let stream = await play.stream(track)
-
-    let resource = createAudioResource(stream.stream, {
-        inputType: stream.type,
-        inlineVolume: true
-    })
+    let resource = createAudioResource(stream.stream, { inputType: stream.type, inlineVolume: true })
     resource.volume.setVolume(volume);
-    let player = createAudioPlayer({
-        behaviors: {
-            noSubscriber: NoSubscriberBehavior.Play
-        }
-    })
+    player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } })
     player.play(resource);
     connection.subscribe(player)
-    player.on('error', error => {
-        console.error(`Error: ${error.message}`);
-        player.play(getNextResource());
-    });
+    player.on('error', error => { console.error(`Error: ${error.message}`); });
     player.on(AudioPlayerStatus.Playing, () => {
         console.log('The audio player has started playing!');
-        //set playing in json to true
         let queue = JSON.parse(fs.readFileSync('./musicQueueSystem.json', 'utf8'));
         queue[interaction.guild.id][voice_channel.channelId].playing = true;
         fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue), 'utf8');
     }); 
+    player.on('buffering', () => { console.log('The audio player is buffering!'); });
     player.on('idle', () => {
+        console.log('idled')
         var queue = JSON.parse(fs.readFileSync('./musicQueueSystem.json', 'utf8'));
         console.log(queue[interaction.guild.id][voice_channel.channelId])
-        if(queue[interaction.guild.id][voice_channel.channelId].queue.length == 0 && playing==true) {
-            connection.destroy();
-            queue[interaction.guild.id][voice_channel.channelId].playing = false;
-            fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue), 'utf8');
-        } else{
+        if(queue[interaction.guild.id][voice_channel.channelId].queue.length == 0) {
+                console.log("done!")
+                connection.destroy();
+                queue[interaction.guild.id][voice_channel.channelId].playing = false;
+                fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue), 'utf8');
+        }
+        else {
             console.log(queue[interaction.guild.id][voice_channel.channelId].queue[0].link)
             JoinChanNew(channel, queue[interaction.guild.id][voice_channel.channelId].queue[0].link, volume, interaction, voice_channel)
             console.log(`Requested By: ${queue[interaction.guild.id][voice_channel.channelId].queue[0].requester}`)
@@ -167,7 +198,9 @@ module.exports = {
                     .setDescription('url')
                     .setRequired(true)))
         .addSubcommand((subcommand) =>
-            subcommand.setName("queue").setDescription("View queue")),
+            subcommand.setName("queue").setDescription("View queue"))
+        .addSubcommand((subcommand) =>
+            subcommand.setName("skip").setDescription("Skip the current song")),
     async execute(interaction) {
         if(interaction.options.getSubcommand() === "play") {
             var stream = interaction.options.getString('link');
@@ -200,7 +233,7 @@ module.exports = {
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: true });
                 }
-            } else if(stream.includes('youtube.com')){
+            } else {
                 getInfoFromURL(interaction, stream, voice_channel);
             }
         } else if(interaction.options.getSubcommand() === "queue") {
@@ -267,6 +300,74 @@ module.exports = {
                         }, 1000);
                     }
                 }
+            }
+        } else if(interaction.options.getSubcommand() === "skip") {
+            const voice_channel = interaction.guild.members.cache.get(interaction.member.user.id).voice
+            if(voice_channel.channelId === null) {
+                const embed = new EmbedBuilder()
+                    .setTitle("Eggium Music - Error!")
+                    .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                    .setDescription('Please be in a VC to use Eggium Music commands')
+                    .setFooter({text: "Eggium - Tanner Approved"})
+                    .setTimestamp();
+                interaction.reply({ embeds: [embed], ephemeral: true });
+            } else {
+                doThis();
+                function doThis() {
+                    var queue = JSON.parse(fs.readFileSync('./musicQueueSystem.json', 'utf8'));
+                    if(queue[interaction.guild.id] === undefined) {
+                        console.log("Server not in json")
+                        console.log(queue)
+                        addition = {[interaction.guild.id]: {}}
+                        queue = Object.assign(queue, addition)
+                        console.log(queue)
+                        fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue), 'utf8');
+                        doThis();
+                    } else if (queue[interaction.guild.id][voice_channel.channelId] === undefined) {
+                        console.log("VC not in json")
+                        console.log(queue[interaction.guild.id])
+                        addition = {
+                            [voice_channel.channelId]: {
+                                "queue": [],
+                                "info":{"name": voice_channel.channel.name}
+                            }
+                        }
+                        queue[interaction.guild.id] = Object.assign(queue[interaction.guild.id], addition);
+                        console.log(queue[interaction.guild.id])
+                        fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue), (err) => {console.log(err)});
+                        doThis();
+                    } else if (queue[interaction.guild.id][voice_channel.channelId].playing === false) {
+                        const embed = new EmbedBuilder()
+                            .setTitle("Eggium Music - Error!")
+                            .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                            .setDescription('No song is playing in this VC')
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                    } else if (queue[interaction.guild.id][voice_channel.channelId].queue.length === 0){
+                        player.stop();
+                        const embed = new EmbedBuilder()
+                            .setTitle("Eggium Music - Skipped!")
+                            .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                            .setDescription('Stopped playing because there are no songs left in the queue')
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                    } else if (queue[interaction.guild.id][voice_channel.channelId].queue.length > 0){
+                        console.log(queue[interaction.guild.id][voice_channel.channelId].queue[0])
+                        JoinChanNew(voice_channel, queue[interaction.guild.id][voice_channel.channelId].queue[0].link, 0.25, interaction, voice_channel);
+                        const embed = new EmbedBuilder()
+                            .setTitle("Eggium Music - Skipped!")
+                            .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                            .setDescription(`Skipped the song! Now playing: ${queue[interaction.guild.id][voice_channel.channelId].queue[0].title}\nRequested by: <@${queue[interaction.guild.id][voice_channel.channelId].queue[0].requester}>`)
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                        queue[interaction.guild.id][voice_channel.channelId].queue.shift();
+                        fs.writeFileSync('./musicQueueSystem.json', JSON.stringify(queue), 'utf8');
+                    }
+                }
+
             }
         }
     }

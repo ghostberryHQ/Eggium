@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, Collection, ActionRowBuilder, ModalBuilder, TextInputBuilder  } = require("discord.js");
+const { EmbedBuilder, Collection, ActionRowBuilder, ModalBuilder, TextInputBuilder,TextInputStyle, ButtonStyle  } = require("discord.js");
 var mysql = require('mysql');
 const config = require('../config.json')
 var myModule = require('../bot.js');
@@ -135,14 +135,29 @@ module.exports = {
       }else if (interaction.options.getSubcommand() === "link") {
         var user = interaction.user;
         var service = interaction.options.getString('services');
-        const embed = new EmbedBuilder()
-          .setTitle(`Eggium Profile Linking - ${user.username}`)
-          .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-          .setDescription(`Linking for ${service} is coming soon!`)
-          .setFooter({text: "Eggium - Tanner Approved"})
-          .setTimestamp();
-        //send embed
-        interaction.reply({ embeds: [embed], ephemeral: true });
+
+
+        const modalLinking = new ModalBuilder()
+        .setCustomId('profileLinking')
+        .setTitle('Eggium Profile Linking');
+        const steamIdentifierInput = new TextInputBuilder()
+            .setCustomId('steamIdentifier')
+            .setLabel("Please enter your Steam Identifier")
+            .setPlaceholder("ID found in the URL of your Steam Profile")
+            .setRequired(true)
+            .setStyle('Short');
+        const secondActionRow = new ActionRowBuilder().addComponents(steamIdentifierInput);
+        modalLinking.addComponents(secondActionRow);
+        interaction.showModal(modalLinking);
+
+        // const embed = new EmbedBuilder()
+        //   .setTitle(`Eggium Profile Linking - ${user.username}`)
+        //   .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+        //   .setDescription(`Linking for ${service} is coming soon!`)
+        //   .setFooter({text: "Eggium - Tanner Approved"})
+        //   .setTimestamp();
+        // //send embed
+        // interaction.reply({ embeds: [embed], ephemeral: true });
       }
     }
 };

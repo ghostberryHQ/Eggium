@@ -19,23 +19,19 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 const commands = [];
 var mysql = require('mysql');
 var con = mysql.createConnection({
-    host: config.AWS_RDS_ENDPOINT,
-    user: config.AWS_RDS_USERNAME,
-    password: config.AWS_RDS_PASSWORD,
-    database: config.AWS_RDS_DB_NAME
+    host: config.SQL_ENDPOINT,
+    user: config.SQL_USERNAME,
+    password: config.SQL_PASSWORD,
+    database: config.SQL_DB_NAME
 });
-const myApiKey = config.SONGLINK_API_KEY
-const getLinks = songlink.getClient({ apiKey: myApiKey });
-
+const getLinks = songlink.getClient({ apiKey: config.SONGLINK_API_KEY });
 exports.con = con;
 setInterval(function () {
     con.query('SELECT 1');
 }, 5000);
 
-
 // Creating a collection for commands in client
 client.commands = new Collection();
-
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
     commands.push(command.data.toJSON());
@@ -61,6 +57,7 @@ client.on('interactionCreate', async interaction => {
         if(steamIdentifier === null || steamIdentifier.length === 0 || !steamIdentifier || steamIdentifier === "") {
             console.log("Not given")
             finalSteamID = 0;
+            finalSteamName = "unknown";
         } else if(onlyNumbers(steamIdentifier)) {
             console.log("only numbers")
             finalSteamID = steamIdentifier;
@@ -80,12 +77,25 @@ client.on('interactionCreate', async interaction => {
         }
         
         setTimeout(function () {
-                var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
-                con.query(sql, function (err, result) {
-                  if (err) throw err;
-                  console.log(`1 record inserted for ${interaction.user.username}`);
-                  interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
-                });
+            con.query(`SELECT * FROM Users WHERE discordID = ${interaction.user.id}`, function (err, result) {
+                console.log(result[0]['steamID'])
+                if(result[0]['steamID'] === 0) {
+                    con.query(`UPDATE Users SET steamID = "${String(finalSteamID)}" WHERE discordID = "${String(interaction.user.id)}";`, function (err, result) {
+                        if (err) throw err;
+                        con.query(`UPDATE Users SET steamName = "${String(finalSteamName)}" WHERE discordID = "${String(interaction.user.id)}";`)
+                        con.query(`UPDATE Users SET dateChanged = "${String(year+"-"+month+"-"+day)}" WHERE discordID = "${String(interaction.user.id)}";`)
+                        console.log(`1 record updated for ${interaction.user.username}`);
+                        interaction.reply({ content: 'Your Eggium profile has been updated successfully!', ephemeral: true });
+                      });
+                } else {
+                    var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
+                    con.query(sql, function (err, result) {
+                      if (err) throw err;
+                      console.log(`1 record inserted for ${interaction.user.username}`);
+                      interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
+                    });
+                }
+            });
         }, 500)
     }
 

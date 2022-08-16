@@ -17,7 +17,7 @@ module.exports = {
                 { name: 'Bot Info :robot:', value: '`/ping`, `/uptime`, `/source`', inline: false },
                 { name: 'Fun :partying_face:', value: '`/detect`, `/pet`, `/pokedex`, `/randomwaifu`, `/sitelook`, `/suntzu`, `/tannercoin`', inline: false },
                 { name: 'Video Game :video_game: ', value: '`/achievements`, `/steam`, `/deals`', inline: false },
-                { name: 'Bot Info', value: '[Support Server](https://discord.gg/invite/YdaBd7xmuD) | [Bot Invite Link](https://discord.com/oauth2/authorize?client_id=972256916506025984&scope=bot&permissions=8) | [Bot Website](https://eggium.net)', inline: false },
+                { name: 'Bot Info', value: '[Support Server](https://discord.gg/invite/YdaBd7xmuD) | [Bot Invite Link](https://discord.com/oauth2/authorize?client_id=972256916506025984&scope=bot&permissions=8) | [Bot Website](https://eggium.net) | [Top.gg Page](https://top.gg/bot/972256916506025984)', inline: false },
             )
             .setFooter({text: "Eggium - Tanner Approved"})
             .setTimestamp();
