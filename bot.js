@@ -89,6 +89,7 @@ client.on('interactionCreate', async interaction => {
                       });
                 } else {
                     var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
+                    // var sql = `INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered, placeCreated) VALUES ('${String(interaction.user.id)}', '${String(interaction.user.username)}', '${String(finalSteamID)}', '${String(finalSteamName)}', '${String(year+"-"+month+"-"+day)}', 'discord')`;
                     con.query(sql, function (err, result) {
                       if (err) throw err;
                       console.log(`1 record inserted for ${interaction.user.username}`);

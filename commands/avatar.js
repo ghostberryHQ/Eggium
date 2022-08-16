@@ -20,8 +20,8 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('Avatar - ' + username.user.username)
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-            .setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.jpeg')
-            .setDescription('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.jpeg')
+            .setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.png')
+            .setDescription('https://cdn.discordapp.com/avatars/'+username.value+'/'+username.user.avatar+'.png')
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
             })

@@ -36,7 +36,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('User Info - ' + username.user.username)
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-            .setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')
+            .setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.png')
             .setDescription(
             '\nUsername: ' + tag +
             '\nNickname: ' + nickname + 
