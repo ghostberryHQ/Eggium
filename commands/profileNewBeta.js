@@ -1,9 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder, Collection, ActionRowBuilder, ModalBuilder, TextInputBuilder,TextInputStyle, ButtonStyle  } = require("discord.js");
-var mysql = require('mysql');
-const config = require('../config.json')
 var myModule = require('../bot.js');
-
 var con = myModule.con;
   
 module.exports = {

@@ -57,7 +57,6 @@ module.exports = {
                     if(result[0].shortenLinks === 0) { shortenLinksInEmbed = "Off" } else { shortenLinksInEmbed = "On" };
                     if(result[0].convertSongLinks === 0) { convertSongLinksInEmbed = "Off" } else { convertSongLinksInEmbed = "On" };
 
-
                     const embed = new EmbedBuilder()
                     .setTitle(`Eggium Server Settings - ${interaction.guild.name}`)
                     .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))

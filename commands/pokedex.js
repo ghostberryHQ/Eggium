@@ -49,11 +49,8 @@ module.exports = {
                             { name: 'Abilities', value: data.abilities.join(' | '), inline: false },
                             { name: 'Evolution Line', value: evoLine, inline: false },
                         )
-                        embed.setFooter({
-                            text: "Eggium - Tanner Approved"
-                        })
+                        .setFooter({ text: "Eggium - Tanner Approved" })
                         .setTimestamp();
-                    //send embed
                     interaction.reply({ embeds: [embed] });
                 }
             });

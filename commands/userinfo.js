@@ -25,26 +25,20 @@ module.exports = {
         }
         setTimeout(function() {
             console.log(username)
-            //get user's tag
-            var tag = username.user.tag;
-            //get user's nickname
             var nickname;
             if(username.member.nickname === null) {
                 nickname = "[not yet set]"
             } else {
                 nickname = username.member.nickname;
             }
-            //get user's avatar
             var avatar = username.user.avatar;
-            //get user's joined date
             var joined = new Date(username.member.joinedTimestamp);
-    
             const embed = new EmbedBuilder()
                 .setTitle('User Info - ' + username.user.username)
                 .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
                 .setThumbnail('https://cdn.discordapp.com/avatars/'+id+'/'+avatar+'.png')
                 .setDescription(
-                '\nUsername: ' + tag +
+                '\nUsername: ' + username.user.tag +
                 '\nNickname: ' + nickname + 
                 '\nDiscord ID: ' + id +
                 '\nJoined Server: ' + joined.toDateString())

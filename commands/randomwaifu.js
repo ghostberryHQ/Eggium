@@ -6,8 +6,6 @@ module.exports = {
         .setDescription('Replies with a random waifu'),
     async execute(interaction) {
         const digit = (Math.floor(Math.random() * 10000) + 1).toString();
-        interaction.reply({ 
-            content: 'https://www.thiswaifudoesnotexist.net/example-'+digit+'.jpg'
-        });
+        interaction.reply({  content: 'https://www.thiswaifudoesnotexist.net/example-'+digit+'.jpg' });
     }
 };

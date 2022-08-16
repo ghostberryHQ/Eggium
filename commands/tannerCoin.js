@@ -28,7 +28,6 @@ module.exports = {
     async execute(interaction) {
 
         if (interaction.options.getSubcommand() === "claim") {
-
             const userCooldowned = await earnDailyTannerCoinCommandCooldown.getUser(interaction.user.id); // Check if user need to be cooldowned
             if(userCooldowned){
                 const timeLeft = msToMinutes(userCooldowned.msLeft, false); // False for excluding '0' characters for each number < 10
