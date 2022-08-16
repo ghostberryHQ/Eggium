@@ -9,7 +9,6 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('Help Command')
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-            // .setDescription(data.description)
             .addFields(
                 { name: 'Profile :man_technologist:', value: '`/profile`', inline: false },
                 { name: 'Music :musical_note:', value: '`/music`', inline: false },
