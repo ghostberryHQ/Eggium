@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ContextMenuInteraction, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 //Later, port this to a Context Menu Interaction
 
@@ -13,7 +13,6 @@ module.exports = {
                 .setDescription('The user you want to get the avatar of')
                 .setRequired(false)),
     async execute(interaction) {
-        // console.log(await interaction.channel.messages.fetch(interaction.targetId))
         var username;
         var id;
         if(interaction.options.get("username") === undefined || interaction.options.get("username") === null) {
@@ -25,7 +24,6 @@ module.exports = {
         }
         setTimeout(function() {
             console.log(username.user.username)
-
             const embed = new EmbedBuilder()
                 .setTitle('Avatar - ' + username.user.username)
                 .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, Collection, ActionRowBuilder, ModalBuilder, TextInputBuilder,TextInputStyle, ButtonStyle  } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder } = require("discord.js");
 var myModule = require('../bot.js');
 var con = myModule.con;
   

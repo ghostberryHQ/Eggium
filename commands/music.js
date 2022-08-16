@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const {EmbedBuilder} = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, entersState } = require('@discordjs/voice');
-const { join } = require('path');
 const play = require('play-dl');
 const fs = require('fs');
 var playing;
@@ -151,7 +150,7 @@ function JoinChannel(channel, track, volume) {
         guildId: channel.guild.id,
         adapterCreator: channel.guild.voiceAdapterCreator,
     });
-    const player = createAudioPlayer();
+    player = createAudioPlayer();
 	resource = createAudioResource(track, {inlineVolume: true})
     resource.volume.setVolume(volume);
     connection.subscribe(player); 
@@ -214,13 +213,16 @@ module.exports = {
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: true });
             }
-            else if(stream.includes('.mp3')){
-                if(playing == false) {
+            else if(stream.includes('.mp3') || stream.includes('.ogg')) {
+                //get playing from json
+                let queue = JSON.parse(fs.readFileSync('./musicQueueSystem.json', 'utf8'));
+                console.log(queue[interaction.guild.id][voice_channel.channelId].playing)
+                if(queue[interaction.guild.id][voice_channel.channelId].playing === false) {
                     JoinChannel(voice_channel, stream, 0.025);
                     const embed = new EmbedBuilder()
                         .setTitle("Eggium Music - Play")
                         .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                        .setDescription(`Playing mp3 stream file in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
+                        .setDescription(`Playing file in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
                         .setFooter({text: "Eggium - Tanner Approved"})
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: false });
@@ -228,7 +230,7 @@ module.exports = {
                     const embed = new EmbedBuilder()
                         .setTitle("Eggium Music - Error!")
                         .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                        .setDescription('A song is already playing! At this time, queueing is not supported for mp3 streams.')
+                        .setDescription('A song is already playing! At this time, queueing is not supported for file streams.')
                         .setFooter({text: "Eggium - Tanner Approved"})
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: true });

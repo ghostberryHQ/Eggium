@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ContextMenuInteraction, EmbedBuilder } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 //Later, port this to a Context Menu Interaction
 

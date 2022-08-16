@@ -1,12 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
-const { EmbedBuilder, ActionRowBuilder, Message, ButtonStyle, ButtonBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonStyle, ButtonBuilder } = require('discord.js');
 const { IsThereAnyDealApi } = require('itad-api-client-ts');
 const config = require('../config.json');
 const itadApi = new IsThereAnyDealApi(config.itadApiKey);
-
-//Later, port this to a Context Menu Interaction
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('deals')
