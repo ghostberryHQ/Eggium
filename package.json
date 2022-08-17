@@ -12,6 +12,7 @@
     "image-to-base64": "^2.2.0",
     "itad-api-client-ts": "^1.0.4",
     "javascript-time-ago": "^2.5.4",
+    "m3u8stream": "^0.8.6",
     "mysql": "^2.18.1",
     "node-fetch": "2.6.1",
     "play-dl": "^1.9.5",

@@ -1,5 +1,6 @@
 //setup Discord Js
 const Discord = require('discord.js');
+const play = require('play-dl');
 const { Collection, EmbedBuilder, Client, GatewayIntentBits, Partials, InteractionType } = require('discord.js');
 const client = new Client(({
     intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent],
@@ -507,4 +508,10 @@ client.once('ready', () => {
     })();
 });
 
+play.setToken({ spotify : {
+    client_id: config.SPOTIFY_CLIENT_ID,
+    client_secret: config.SPOTIFY_CLIENT_SECRET,
+    refresh_token: config.SPOTIFY_CLIENT_REFRESH,
+    market: 'US'
+} })
 client.login(token);
