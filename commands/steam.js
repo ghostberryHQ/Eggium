@@ -24,20 +24,11 @@ module.exports = {
         var user = interaction.options.getUser("username");
         if(dataType == 'recentlyplayed') {
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
-                if(result[0]["CAST(steamID as CHAR)"] === "0" || result[0]["CAST(steamID as CHAR)"] === 0) {
-                    const embed = new EmbedBuilder()
-                        .setTitle('Steam account not linked to their Eggium Profile')
-                        .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-                        .setDescription('It looks like the user you are looking for does not have their Steam account linked to their Eggium profile. Ask them to!');
-                        embed.setFooter({text: "Eggium - Tanner Approved"})
-                        .setTimestamp();
-                    interaction.reply({ embeds: [embed] , ephemeral: true});
-                } else
                 if(result === undefined || result === null || result.length === 0) {
                     const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-                    .setDescription('It looks like the user you are looking for does not have an Eggium Profile. Please encourage them to make one!');
+                    .setDescription('It looks like the user you are looking for either does not have an Eggium Profile or does not have their Steam account linked to their Eggium profile.');
                     embed.setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                     interaction.reply({ embeds: [embed] , ephemeral: true});
@@ -73,23 +64,14 @@ module.exports = {
                     });
 
                 }
-            });
+            })
         } else if (dataType == 'userinfo') {
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
-                if(result[0]["CAST(steamID as CHAR)"] === "0" || result[0]["CAST(steamID as CHAR)"] === 0) {
-                    const embed = new EmbedBuilder()
-                        .setTitle('Steam account not linked to their Eggium Profile')
-                        .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-                        .setDescription('It looks like the user you are looking for does not have their Steam account linked to their Eggium profile. Ask them to!');
-                        embed.setFooter({text: "Eggium - Tanner Approved"})
-                        .setTimestamp();
-                    interaction.reply({ embeds: [embed] , ephemeral: true});
-                } else
                 if(result === undefined || result === null || result.length === 0) {
                     const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-                    .setDescription('It looks like the user you are looking for does not have an Eggium Profile. Please encourage them to make one!');
+                    .setDescription('It looks like the user you are looking for either does not have an Eggium Profile or does not have their Steam account linked to their Eggium profile.');
                     embed.setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                     interaction.reply({ embeds: [embed] , ephemeral: true});

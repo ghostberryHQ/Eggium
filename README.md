@@ -10,6 +10,7 @@ Eggium is a new Discord Bot aimed to mix fun and functionality. Eggium has multi
         - VALORANT
         - VS Code
         - League of Legends
+        - Fishing Planet
 - View steam stats directly from Discord using the /steam commands!
 - Feature filled economy! Allow your members to collect coins and more through not only quests & achievements but also through daily prizes!
 - And much more!

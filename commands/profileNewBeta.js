@@ -133,28 +133,29 @@ module.exports = {
         var user = interaction.user;
         var service = interaction.options.getString('services');
 
-
-        const modalLinking = new ModalBuilder()
-        .setCustomId('profileLinking')
-        .setTitle('Eggium Profile Linking');
-        const steamIdentifierInput = new TextInputBuilder()
-            .setCustomId('steamIdentifier')
-            .setLabel("Please enter your Steam Identifier")
-            .setPlaceholder("ID found in the URL of your Steam Profile")
-            .setRequired(true)
-            .setStyle('Short');
-        const secondActionRow = new ActionRowBuilder().addComponents(steamIdentifierInput);
-        modalLinking.addComponents(secondActionRow);
-        interaction.showModal(modalLinking);
-
-        // const embed = new EmbedBuilder()
-        //   .setTitle(`Eggium Profile Linking - ${user.username}`)
-        //   .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-        //   .setDescription(`Linking for ${service} is coming soon!`)
-        //   .setFooter({text: "Eggium - Tanner Approved"})
-        //   .setTimestamp();
-        // //send embed
-        // interaction.reply({ embeds: [embed], ephemeral: true });
+        if(service === "steam") {
+          const modalLinking = new ModalBuilder()
+          .setCustomId('profileLinking')
+          .setTitle('Eggium Profile Linking');
+          const steamIdentifierInput = new TextInputBuilder()
+              .setCustomId('steamIdentifier')
+              .setLabel("Please enter your Steam Identifier")
+              .setPlaceholder("ID found in the URL of your Steam Profile")
+              .setRequired(true)
+              .setStyle('Short');
+          const secondActionRow = new ActionRowBuilder().addComponents(steamIdentifierInput);
+          modalLinking.addComponents(secondActionRow);
+          interaction.showModal(modalLinking);
+        } else {
+            const embed = new EmbedBuilder()
+              .setTitle(`Eggium Profile Linking - ${user.username}`)
+              .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+              .setDescription(`Linking for ${service} is coming soon!`)
+              .setFooter({text: "Eggium - Tanner Approved"})
+              .setTimestamp();
+            //send embed
+            interaction.reply({ embeds: [embed], ephemeral: true });
+        }
       }
     }
 };
