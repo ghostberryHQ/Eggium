@@ -44,7 +44,6 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (interaction.type === InteractionType.ModalSubmit) {
-        console.log()
         // Get the data entered by the user
         const steamIdentifier = interaction.fields.getTextInputValue('steamIdentifier');
         console.log({ steamIdentifier });
@@ -79,8 +78,20 @@ client.on('interactionCreate', async interaction => {
         
         setTimeout(function () {
             con.query(`SELECT * FROM Users WHERE discordID = ${interaction.user.id}`, function (err, result) {
-                console.log(result[0]['steamID'])
-                if(result[0]['steamID'] === 0) {
+                console.log(finalSteamID + " | " + finalSteamName)
+                if(result.length === 0 || result[0] === undefined || result[0] === null) {
+                    //doesnt have an account
+                    console.log("doesnt have an account")
+                    // var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
+                    var sql = `INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered, placeCreated) VALUES ('${String(interaction.user.id)}', '${String(interaction.user.username)}', '${String(finalSteamID)}', '${String(finalSteamName)}', '${String(year+"-"+month+"-"+day)}', 'discord')`;
+                    con.query(sql, function (err, result) {
+                      if (err) throw err;
+                      console.log(`1 record inserted for ${interaction.user.username}`);
+                      interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
+                    });
+                } else {
+                    //has an account. Lets update it
+                    console.log("has an account")
                     con.query(`UPDATE Users SET steamID = "${String(finalSteamID)}" WHERE discordID = "${String(interaction.user.id)}";`, function (err, result) {
                         if (err) throw err;
                         con.query(`UPDATE Users SET steamName = "${String(finalSteamName)}" WHERE discordID = "${String(interaction.user.id)}";`)
@@ -88,14 +99,6 @@ client.on('interactionCreate', async interaction => {
                         console.log(`1 record updated for ${interaction.user.username}`);
                         interaction.reply({ content: 'Your Eggium profile has been updated successfully!', ephemeral: true });
                       });
-                } else {
-                    var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
-                    // var sql = `INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered, placeCreated) VALUES ('${String(interaction.user.id)}', '${String(interaction.user.username)}', '${String(finalSteamID)}', '${String(finalSteamName)}', '${String(year+"-"+month+"-"+day)}', 'discord')`;
-                    con.query(sql, function (err, result) {
-                      if (err) throw err;
-                      console.log(`1 record inserted for ${interaction.user.username}`);
-                      interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
-                    });
                 }
             });
         }, 500)
