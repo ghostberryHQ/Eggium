@@ -4,6 +4,7 @@ const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioRe
 const play = require('play-dl');
 const config = require('../config.json');
 const m3u8stream = require('m3u8stream');
+const twitch = require("twitch-m3u8");
 var myModule = require('../bot.js');
 var con = myModule.con;
 var player;
@@ -23,7 +24,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                         .setFooter({text: "Eggium - Tanner Approved"})
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: false });
-                    console.log("Sent reply 1")
                 })
             } else if(link.includes("soundcloud.com")) {
                 play.setToken({ soundcloud : { client_id : config.SOUNDCLOUD_CLIENT_ID } })
@@ -36,7 +36,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-                console.log("Sent reply 2")
             } else if(link.includes("spotify.com")) {
                 if (play.is_expired()) {
                     console.log("Token expired")
@@ -54,7 +53,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-                console.log("Sent reply 3")
             } else {
                 let yt_info = await play.search(link, {
                     limit: 1
@@ -68,7 +66,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-                console.log("Sent reply 4")
             }
         } else {
             //song is playing.
@@ -77,6 +74,7 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     var date = new Date();
                     date.toLocaleString('en-US', { timeZone: 'America/New_York' });
                     console.log(`Added song to queue! | ${date.toISOString().slice(0, 19).replace('T', ' ')}`);
+                    console.log(info.video_details.thumbnails)
                     con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${link}", "${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")}", ${String(interaction.member.user.id)}, "queued", ${String(voice_channel.guild.id)}, ${String(voice_channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
                     const embed = new EmbedBuilder()
                         .setTitle("Eggium Music - Added to Queue")
@@ -85,16 +83,15 @@ async function getInfoFromURL(interaction, link, voice_channel){
                         .setFooter({text: "Eggium - Tanner Approved"})
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: false });
-                    console.log("Sent reply 5")
                 });
 
             } else if(link.includes("soundcloud.com")) {
-
                 play.setToken({ soundcloud : { client_id : config.SOUNDCLOUD_CLIENT_ID } })
                 let so_info = await play.soundcloud(link)
                 var date = new Date();
                 date.toLocaleString('en-US', { timeZone: 'America/New_York' });
                 console.log(`Added song to queue! | ${date.toISOString().slice(0, 19).replace('T', ' ')}`);
+                console.log(so_info.thumbnail)
                 con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${so_info.permalink}", "${so_info.name.replaceAll(`"`, "").replaceAll(`'`, "")}", ${String(interaction.member.user.id)}, "queued", ${String(voice_channel.guild.id)}, ${String(voice_channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
                 const embed = new EmbedBuilder()
                     .setTitle("Eggium Music - Added to Queue")
@@ -103,7 +100,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-                console.log("Sent reply 6")
 
 
             } else if(link.includes("spotify.com")) {
@@ -118,6 +114,7 @@ async function getInfoFromURL(interaction, link, voice_channel){
                 var date = new Date();
                 date.toLocaleString('en-US', { timeZone: 'America/New_York' });
                 console.log(`Added song to queue! | ${date.toISOString().slice(0, 19).replace('T', ' ')}`);
+                console.log(searched[0].thumbnails)
                 con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${searched[0].url}", "${searched[0].title.replaceAll(`"`, "").replaceAll(`'`, "")}", ${String(interaction.member.user.id)}, "queued", ${String(voice_channel.guild.id)}, ${String(voice_channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
                 const embed = new EmbedBuilder()
                     .setTitle("Eggium Music - Added to Queue")
@@ -126,7 +123,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-                console.log("Sent reply 7")
             } else {
                 let yt_info = await play.search(link, {
                     limit: 1
@@ -142,7 +138,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-                console.log("Sent reply 8")
             }
         }
     })
@@ -184,8 +179,6 @@ async function JoinChanNew(channel, link, name, volume, interaction, shouldInser
                 console.log('songs in queue')
                 con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}";`);
                 con.query(`SELECT * FROM MusicSystem WHERE songStatus = "queued" ORDER BY dateAdded ASC;`, function (err, result, fields) {
-                    console.log(result)
-                    console.log(result[0])
                     con.query(`UPDATE MusicSystem SET songStatus = "playing" WHERE songStatus = "queued" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}" AND id = "${result[0].id}";`);
                 });
                 // player.stop()
@@ -204,44 +197,69 @@ function JoinChannel(channel, track, volume, interaction) {
     if(track.includes('.m3u') || track.includes('.m3u8')){
         link = track;
         track = m3u8stream(track);
-    }
-    const connection = joinVoiceChannel({
-        channelId: channel.channelId,
-        guildId: channel.guild.id,
-        adapterCreator: channel.guild.voiceAdapterCreator,
-    });
-    player = createAudioPlayer();
-	resource = createAudioResource(track, {inlineVolume: true})
-    resource.volume.setVolume(volume);
-    connection.subscribe(player); 
-    connection.on(VoiceConnectionStatus.Ready, () => {console.log("ready"); player.play(resource);})
-    connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
-        try {
-            console.log("Disconnected.")
-            await Promise.race([
-                entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-                entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
-            ]);
-        } catch (error) {
-            connection.destroy();
+    } else if(track.includes('twitch.tv')){
+        link = track;
+        var twitchLink = new URL(track);
+        if(twitchLink.pathname.includes("/videos/")) {
+            twitch.getVod(twitchLink.pathname.split('videos/')[1], false)
+            .then(data => { track = m3u8stream(data.filter(item => item.quality === "Audio Only")[0].url) })
+            .catch(err => console.error(err));
+        } else {
+            //Stream
+            twitch.getStream(twitchLink.pathname.substring(1), false)
+                .then(data => {
+                    console.log(data)
+                    console.log(data.filter(item => item.quality === "audio_only")[0].url)
+                    track = m3u8stream(data.filter(item => item.quality === "audio_only")[0].url);
+                }).catch(err => console.error(err));
         }
-    });
-    player.on('error', error => {
-        console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-        player.play(getNextResource());
-    });
-    player.on(AudioPlayerStatus.Playing, () => {
-        var date = new Date();
-        date.toLocaleString('en-US', { timeZone: 'America/New_York' });
-        console.log(`The audio player has started playing! | ${date.toISOString().slice(0, 19).replace('T', ' ')}`);
-        console.log(link)
-        console.log(link.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/)[0])
-        con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${link.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/)[0]}", "${link.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/)[0]}", ${String(interaction.member.user.id)}, "playing", ${String(channel.guild.id)}, ${String(channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
-    }); 
-    player.on('idle', () => {
-        connection.destroy();
-        con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}";`);
-    })
+    }
+    setTimeout(function(){
+        const connection = joinVoiceChannel({
+            channelId: channel.channelId,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+        player = createAudioPlayer();
+        resource = createAudioResource(track, {inlineVolume: true})
+        resource.volume.setVolume(volume);
+        connection.subscribe(player); 
+        connection.on(VoiceConnectionStatus.Ready, () => {console.log("ready"); player.play(resource);})
+        connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
+            try {
+                console.log("Disconnected.")
+                await Promise.race([
+                    entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+                    entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+                ]);
+            } catch (error) {
+                connection.destroy();
+            }
+        });
+        player.on('error', error => {
+            console.error(`Error: ${error.message}`);
+        });
+        player.on(AudioPlayerStatus.Playing, () => {
+            var date = new Date();
+            date.toLocaleString('en-US', { timeZone: 'America/New_York' });
+            console.log(`The audio player has started playing! | ${date.toISOString().slice(0, 19).replace('T', ' ')}`);
+            console.log(link)
+            if(link.includes('twitch.tv')){
+                var twitchLinkFinal = new URL(link);
+                console.log(twitchLinkFinal.pathname.substring(1))
+                if(channel.channelId === null) return interaction.reply("ERROR: No voice channel found. This is a really weird error. Please try again. If that doesnt work try reporting the error in [the Eggium support server.](https://discord.gg/invite/YdaBd7xmuD)");
+                con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${link}", "${link}", ${String(interaction.member.user.id)}, "playing", ${String(channel.guild.id)}, ${String(channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
+            } else{
+                console.log(link.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/)[0])
+                if(channel.channelId === null) return interaction.reply("ERROR: No voice channel found. This is a really weird error. Please try again. If that doesnt work try reporting the error in [the Eggium support server.](https://discord.gg/invite/YdaBd7xmuD)");
+                con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${link.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/)[0]}", "${link.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/)[0]}", ${String(interaction.member.user.id)}, "playing", ${String(channel.guild.id)}, ${String(channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
+            }
+        }); 
+        player.on('idle', () => {
+            connection.destroy();
+            con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}";`);
+        })
+    },700)
 }
 
 
@@ -273,8 +291,7 @@ module.exports = {
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: true });
-                console.log("Sent reply 10")
-            } else if(link.includes('.mp3') || link.includes('.ogg') || link.includes('.m3u') || link.includes('.m3u8')){
+            } else if(link.includes('.mp3') || link.includes('.ogg') || link.includes('.m3u') || link.includes('.m3u8') || link.includes('twitch.tv')){
                 con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, function (err, result, fields) {
                     if(result[0] === undefined || result[0] === null) {
                         JoinChannel(voice_channel, link, 0.25, interaction);
@@ -285,7 +302,6 @@ module.exports = {
                             .setFooter({text: "Eggium - Tanner Approved"})
                             .setTimestamp();
                         interaction.reply({ embeds: [embed], ephemeral: false });
-                        console.log("Sent reply 11")
                     } else {
                         const embed = new EmbedBuilder()
                             .setTitle("Eggium Music - Error!")
@@ -294,7 +310,6 @@ module.exports = {
                             .setFooter({text: "Eggium - Tanner Approved"})
                             .setTimestamp();
                         interaction.reply({ embeds: [embed], ephemeral: true });
-                        console.log("Sent reply 12")
                     }
                 });
             } else {
@@ -309,7 +324,6 @@ module.exports = {
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: true });
-                console.log("Sent reply 13")
             } else {
                 con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, function (err, result, fields) {
                     if(result[0] === undefined || result[0] === null) {
@@ -320,11 +334,9 @@ module.exports = {
                             .setFooter({text: "Eggium - Tanner Approved"})
                             .setTimestamp();
                         interaction.reply({ embeds: [embed], ephemeral: true });
-                        console.log("Sent reply 14")
                     } else {
                         con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "queued" ORDER BY dateAdded ASC;`, async function (err, result, fields) {
                             if(result[0] === undefined || result[0] === null) {
-                                console.log("here")
                                 //no songs in queue. Safe to disconnect
                                 const embed = new EmbedBuilder()
                                     .setTitle("Eggium Music - Skip")
@@ -333,11 +345,9 @@ module.exports = {
                                     .setFooter({text: "Eggium - Tanner Approved"})
                                     .setTimestamp();
                                 interaction.reply({ embeds: [embed], ephemeral: true });
-                                console.log("Sent reply 15")
                                 con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId}`);
                                 player.stop();
                             } else{
-                                console.log("no, here.")
                                 con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId}`);
                                 console.log(result[0])
                                 con.query(`UPDATE MusicSystem SET songStatus = "playing" WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND id = "${result[0].id}";`)
@@ -355,7 +365,6 @@ module.exports = {
                                     .setFooter({text: "Eggium - Tanner Approved"})
                                     .setTimestamp();
                                 interaction.reply({ embeds: [embed], ephemeral: true });
-                                console.log("Sent reply 16")
                             }
                         });
                     }

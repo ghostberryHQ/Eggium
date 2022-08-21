@@ -40,7 +40,6 @@ module.exports = {
         var allButtons = [];
         var gamesavailableToSearch =[];
 
-
         if(matchingDeals.list.length == 0) {
             buttons = new ButtonBuilder()
                         .setCustomId('0')
@@ -75,9 +74,8 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('Game Deals - ' + game_name)
             .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
-            //.setThumbnail('https://cdn.discordapp.com/avatars/'+username.value+'/'+avatar+'.jpeg')
             .setDescription(
-            'This command is in beta. If you find any bug please report them.\nCurrently, This only scans official retailers and not sites like eneba and pckeys.')
+            'This command is in beta. If you find any bug please report them.\nCurrently, This only scans official retailers and not sites like Eneba and PcKeys.')
             embed.setFooter({
                 text: "Eggium - Tanner Approved"
             })
@@ -111,12 +109,12 @@ module.exports = {
             const sd = matchingDeals.list;
             //console.log(sd)
 
-            try {
-                fs.writeFileSync('./unfiltered.json', JSON.stringify(sd));
-                // file written successfully
-              } catch (err) {
-                console.error(err);
-              }
+            // try {
+            //     fs.writeFileSync('./unfiltered.json', JSON.stringify(sd));
+            //     // file written successfully
+            //   } catch (err) {
+            //     console.error(err);
+            //   }
 
               console.log("SD LENGTH: " + sd.length);
             
@@ -131,16 +129,15 @@ module.exports = {
                 return el != null;
               });
               
-            console.log("Filtered: ");
-            var ids = [];
-            try {
-                fs.writeFileSync('./filtered.json', JSON.stringify(filtered));
-                // file written successfully
-              } catch (err) {
-                console.error(err);
-              }
+            // console.log("Filtered: ");
+            // try {
+            //     fs.writeFileSync('./filtered.json', JSON.stringify(filtered));
+            //     // file written successfully
+            //   } catch (err) {
+            //     console.error(err);
+            //   }
 
-
+            // var ids = [];
             // var xboxGamePassConsoleGames = []
 
             // async function myfunction() {
