@@ -11,20 +11,69 @@ var player;
 const { toDataURL } =  require('qrcode');
 
 
+
+
+async function playPlaylist(interaction, link, voice_channel){
+    con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, async function (err, result, fields) {
+        if(result[0] === undefined || result[0] === null){
+            //no songs in queue
+            let yt_playlist_info = await play.playlist_info(link).then(info => {
+                console.log(info.videos)
+                JoinChanNew(voice_channel, info.videos[0].url, info.videos[0].title, 0.25, interaction);
+                for (let i = 1; i < info.videos.length; i++) {
+                    console.log(info.videos[i].title)
+                    var date = new Date();
+                    date.toLocaleString('en-US', { timeZone: 'America/New_York' });
+                    con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${info.videos[i].url}", "${info.videos[i].title.replaceAll(`"`, "").replaceAll(`'`, "")}", ${String(interaction.member.user.id)}, "queued", ${String(voice_channel.guild.id)}, ${String(voice_channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
+                }
+                const embed = new EmbedBuilder()
+                    .setTitle("Eggium Music - Play")
+                    .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                    .setDescription(`Now Playing "${info.videos[0].title.replaceAll(`"`, "").replaceAll(`'`, "")}" in ${voice_channel.channel.name}!` + `\nAdded ${info.videos.length - 1} songs from playlist to queue`+ `\nRequested by: <@${interaction.member.user.id}>`)
+                    .setFooter({text: "Eggium - Tanner Approved"})
+                    .setTimestamp();
+                interaction.reply({ embeds: [embed], ephemeral: false });
+            })        
+        } else {
+            //songs in queue
+            let yt_playlist_info = await play.playlist_info(link).then(info => {
+                console.log(info.videos)
+                for (let i = 0; i < info.videos.length; i++) {
+                    console.log(info.videos[i].title)
+                    var date = new Date();
+                    date.toLocaleString('en-US', { timeZone: 'America/New_York' });
+                    con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${info.videos[i].url}", "${info.videos[i].title.replaceAll(`"`, "").replaceAll(`'`, "")}", ${String(interaction.member.user.id)}, "queued", ${String(voice_channel.guild.id)}, ${String(voice_channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
+                }
+                const embed = new EmbedBuilder()
+                    .setTitle("Eggium Music - Queue")
+                    .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                    .setDescription(`Added ${info.videos.length} songs from playlist to queue`+ `\nRequested by: <@${interaction.member.user.id}>`)
+                    .setFooter({text: "Eggium - Tanner Approved"})
+                    .setTimestamp();
+                interaction.reply({ embeds: [embed], ephemeral: false });
+            })
+        }
+    })
+}
+
 async function getInfoFromURL(interaction, link, voice_channel){
     con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, async function (err, result, fields) {
         if(result[0] === undefined || result[0] === null){
             if(link.includes("youtube.com")) {
-                let yt_info = await play.video_info(link).then(info => {
-                    JoinChanNew(voice_channel, link, info.video_details.title, 0.25, interaction);
-                    const embed = new EmbedBuilder()
-                        .setTitle("Eggium Music - Play")
-                        .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                        .setDescription(`Now Playing "${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")}" in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
-                        .setFooter({text: "Eggium - Tanner Approved"})
-                        .setTimestamp();
-                    interaction.reply({ embeds: [embed], ephemeral: false });
-                })
+                if(link.includes("playlist?list=")) {
+                    playPlaylist(interaction, link, voice_channel);
+                } else {
+                    let yt_info = await play.video_info(link).then(info => {
+                        JoinChanNew(voice_channel, link, info.video_details.title, 0.25, interaction);
+                        const embed = new EmbedBuilder()
+                            .setTitle("Eggium Music - Play")
+                            .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                            .setDescription(`Now Playing "${info.video_details.title.replaceAll(`"`, "").replaceAll(`'`, "")}" in ${voice_channel.channel.name}!` + `\nRequested by: <@${interaction.member.user.id}>`)
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: false });
+                    })
+                }
             } else if(link.includes("soundcloud.com")) {
                 play.setToken({ soundcloud : { client_id : config.SOUNDCLOUD_CLIENT_ID } })
                 let so_info = await play.soundcloud(link)
@@ -37,6 +86,7 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
             } else if(link.includes("spotify.com")) {
+                if(link.includes("/playlist/")) return interaction.reply("Playlists are not supported yet!", { ephemeral: true });
                 if (play.is_expired()) {
                     console.log("Token expired")
                     await play.refreshToken() // This will check if access token has expired or not. If yes, then refresh the token.
@@ -84,7 +134,6 @@ async function getInfoFromURL(interaction, link, voice_channel){
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: false });
                 });
-
             } else if(link.includes("soundcloud.com")) {
                 play.setToken({ soundcloud : { client_id : config.SOUNDCLOUD_CLIENT_ID } })
                 let so_info = await play.soundcloud(link)
@@ -100,9 +149,8 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     .setFooter({text: "Eggium - Tanner Approved"})
                     .setTimestamp();
                 interaction.reply({ embeds: [embed], ephemeral: false });
-
-
             } else if(link.includes("spotify.com")) {
+                if(link.includes("/playlist/")) return interaction.reply("Playlists are not supported yet!", { ephemeral: true });
                 if (play.is_expired()) {
                     console.log("Token expired")
                     await play.refreshToken()
@@ -294,7 +342,7 @@ module.exports = {
             } else if(link.includes('.mp3') || link.includes('.ogg') || link.includes('.m3u') || link.includes('.m3u8') || link.includes('twitch.tv')){
                 con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, function (err, result, fields) {
                     if(result[0] === undefined || result[0] === null) {
-                        JoinChannel(voice_channel, link, 0.25, interaction);
+                        if(link.includes('twitch.tv')){ JoinChannel(voice_channel, link, 0.50, interaction); } else {JoinChannel(voice_channel, link, 0.25, interaction);}
                         const embed = new EmbedBuilder()
                             .setTitle("Eggium Music - Play")
                             .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
