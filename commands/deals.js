@@ -39,7 +39,6 @@ module.exports = {
         var buttons;
         var allButtons = [];
         var gamesavailableToSearch =[];
-
         if(matchingDeals.list.length == 0) {
             buttons = new ButtonBuilder()
                         .setCustomId('0')
@@ -53,15 +52,15 @@ module.exports = {
                         .setCustomId(String(i))
                         .setLabel(gamesFound[i])
                         .setStyle(ButtonStyle.Primary)
-                console.log("BUTTON LABEL: "+buttons.label)
+                console.log("BUTTON LABEL: "+buttons.data.label)
                 if(i > 4) {
                     console.log("not adding")
                 } else {
-                    if(buttons.label.length > 79) {
+                    if(buttons.data.label.length > 79) {
                         console.log("ID: "+ i + " is too long")
                     } else {
                         allButtons.push(buttons);
-                        gamesavailableToSearch.push(buttons.label);
+                        gamesavailableToSearch.push(buttons.data.label);
                     }
                 }
             }

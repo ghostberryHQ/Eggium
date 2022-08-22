@@ -13,3 +13,5 @@ user.json
 storage.json
 dev.json
 musicQueueSystem.json
+commands/team.js
+*.png

@@ -17,8 +17,6 @@ async function playPlaylist(interaction, link, voice_channel){
     con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, async function (err, result, fields) {
         if(result[0] === undefined || result[0] === null){
             //no songs in queue
-
-
             if(link.includes("youtube.com")){
                 let yt_playlist_info = await play.playlist_info(link, { incomplete : true }).then(info => {
                     console.log(info.videos)
@@ -55,7 +53,7 @@ async function playPlaylist(interaction, link, voice_channel){
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: false });
                 }).catch(err => console.log(err))
-            } 
+            }
         } else {
             //songs in queue
             if(link.includes("youtube.com")){
@@ -131,7 +129,7 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     interaction.reply({ embeds: [embed], ephemeral: false });
                 }
             } else if(link.includes("spotify.com")) {
-                if(link.includes("/playlist/")) return interaction.reply("Playlists are not supported yet!", { ephemeral: true });
+                if(link.includes("/playlist/")) return interaction.reply("Spotify playlists are not supported yet! Please try either Soundcloud or Youtube.", { ephemeral: true });
                 if (play.is_expired()) {
                     console.log("Token expired")
                     await play.refreshToken() // This will check if access token has expired or not. If yes, then refresh the token.
@@ -203,7 +201,7 @@ async function getInfoFromURL(interaction, link, voice_channel){
                     interaction.reply({ embeds: [embed], ephemeral: false });
                 }
             } else if(link.includes("spotify.com")) {
-                if(link.includes("/playlist/")) return interaction.reply("Playlists are not supported yet!", { ephemeral: true });
+                if(link.includes("/playlist/")) return interaction.reply("Spotify playlists are not supported yet! Please try either Soundcloud or Youtube.", { ephemeral: true });
                 if (play.is_expired()) {
                     console.log("Token expired")
                     await play.refreshToken()
