@@ -74,11 +74,13 @@ module.exports = {
                                 labels.push(label + ': ' + confidence);
                             }
                             //create embed
+                            var finalDescrip;
+                            if(labels.length == 0) finalDescrip = "Error processing this image. This could be due to a number of reasons. Please report this in the Eggium Support Discord Server.";
+                            else finalDescrip = labels.join('\n');
                             const embed = new EmbedBuilder()
-
                             .setTitle('Detect')
                             .setColor('#0099ff')
-                            .setDescription(labels.join('\n'))
+                            .setDescription(finalDescrip)
                             .setFooter({ text: "Eggium - Tanner Approved" })
                             .setThumbnail(finalimageURL)
                             .setTimestamp();
