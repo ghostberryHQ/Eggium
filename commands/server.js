@@ -137,6 +137,7 @@ module.exports = {
                             time: 20000,
                         });
                         collector.on('collect', async i => {
+                            console.log(i.customId);
                             var buttonIdClicked = i.customId;
                             if(i.values != undefined) {
                                 if(onlyNumbers(i.values[0]) && selectType === "welcome") {
@@ -149,17 +150,18 @@ module.exports = {
                                     i.update({ content: `Set "Starboard Channel" to ${i.values[0]}`, components: [], ephemeral: true });
                                 }
                             }
-                            if(buttonIdClicked === "universalsonglinks" && buttonTypeUniversalSongLinks === "SUCCESS") {
+                            if(buttonIdClicked === "universalsonglinks" && buttonTypeUniversalSongLinks === ButtonStyle.Success) {
                                 con.query('UPDATE Servers SET convertSongLinks = "0" where serverID = "'+interaction.guild.id+'";');
                                 i.update({ content: `Set "Universal Song Links" to False`, components: [], ephemeral: true })
-                            } else if(buttonIdClicked === "universalsonglinks" && buttonTypeUniversalSongLinks === "DANGER") {
+                            } else if(buttonIdClicked === "universalsonglinks" && buttonTypeUniversalSongLinks === ButtonStyle.Danger) {
                                 con.query('UPDATE Servers SET convertSongLinks = "1" where serverID = "'+interaction.guild.id+'";');
                                 i.update({ content: `Set "Universal Song Links" to True`, components: [], ephemeral: true })
                             }
-                            if(buttonIdClicked === "shortenlinks" && buttonTypeShortenLinks === "SUCCESS") {
+                            if(buttonIdClicked === "shortenlinks" && buttonTypeShortenLinks === ButtonStyle.Success) {
+                                //console.log("found")
                                 con.query('UPDATE Servers SET shortenLinks = "0" where serverID = "'+interaction.guild.id+'";');
                                 i.update({ content: `Set "Shorten Links" to False`, components: [], ephemeral: true });
-                            } else if(buttonIdClicked === "shortenlinks" && buttonTypeShortenLinks === "DANGER") {
+                            } else if(buttonIdClicked === "shortenlinks" && buttonTypeShortenLinks === ButtonStyle.Danger) {
                                 con.query('UPDATE Servers SET shortenLinks = "1" where serverID = "'+interaction.guild.id+'";');
                                 i.update({ content: `Set "Shorten Links" to True`, components: [], ephemeral: true });
                             } else if(buttonIdClicked === "welcomeChannelButton") {
@@ -171,7 +173,10 @@ module.exports = {
                                 i.update({ content: `Please select the channel you'd like to set as your starboard channel`, components: [channelRows], ephemeral: true });
                             }
                         });
-                        collector.on('end', collected => console.log(`Collected ${collected.size} items`));
+                        collector.on('end', collected => {
+                            console.log(`Collected ${collected.size} items`)
+                            //i.update({ content: `This editing session has expired. Please run the server command again to continue!`, components: [], ephemeral: true });
+                        });
                     }, 100)
                 });
             }
