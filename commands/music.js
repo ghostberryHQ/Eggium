@@ -10,9 +10,6 @@ var con = myModule.con;
 var player;
 const { toDataURL } =  require('qrcode');
 
-
-
-
 async function playPlaylist(interaction, link, voice_channel){
     con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, async function (err, result, fields) {
         if(result[0] === undefined || result[0] === null){
@@ -34,7 +31,18 @@ async function playPlaylist(interaction, link, voice_channel){
                         .setFooter({text: "Eggium - Tanner Approved"})
                         .setTimestamp();
                     interaction.reply({ embeds: [embed], ephemeral: false });
-                })
+                }).catch(err => {
+                    console.log(err)
+                    console.log("There was an error getting the playlist info. Details above.")
+                    const embed = new EmbedBuilder()
+                        .setTitle("Eggium Music - Play Error")
+                        .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                        .setDescription(`There was an error playing your song. This is most commonly caused by an age restricted video.`)
+                        .setFooter({text: "Eggium - Tanner Approved"})
+                        .setTimestamp();
+                    interaction.reply({ embeds: [embed], ephemeral: true });
+
+                });
             } else if(link.includes("soundcloud.com")){
                 let soundcloud_info = await play.soundcloud(link, { incomplete : true }).then(info => {
                     console.log(info.tracks)
@@ -96,6 +104,7 @@ async function playPlaylist(interaction, link, voice_channel){
 }
 
 async function getInfoFromURL(interaction, link, voice_channel){
+    if(link.includes("google.com/url")) return interaction.reply({ content: 'The link provided is not a song link. It seems you copied from google search' , ephemeral: true});
     con.query(`SELECT * FROM MusicSystem WHERE serverID = ${interaction.guild.id} AND voiceChannelID = ${voice_channel.channelId} AND songStatus = "playing"`, async function (err, result, fields) {
         if(result[0] === undefined || result[0] === null){
             if(link.includes("youtube.com")) {
@@ -111,7 +120,17 @@ async function getInfoFromURL(interaction, link, voice_channel){
                             .setFooter({text: "Eggium - Tanner Approved"})
                             .setTimestamp();
                         interaction.reply({ embeds: [embed], ephemeral: false });
-                    })
+                    }).catch(err => {
+                        console.log(err)
+                        console.log("There was an error getting the playlist info. Details above.")
+                        const embed = new EmbedBuilder()
+                            .setTitle("Eggium Music - Play Error")
+                            .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                            .setDescription(`There was an error playing your song. This is most commonly caused by an age restricted video.`)
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                    });
                 }
             } else if(link.includes("soundcloud.com")) {
                 play.setToken({ soundcloud : { client_id : config.SOUNDCLOUD_CLIENT_ID } })
@@ -179,6 +198,16 @@ async function getInfoFromURL(interaction, link, voice_channel){
                             .setFooter({text: "Eggium - Tanner Approved"})
                             .setTimestamp();
                         interaction.reply({ embeds: [embed], ephemeral: false });
+                    }).catch(err => {
+                        console.log(err)
+                        console.log("There was an error getting the playlist info. Details above.")
+                        const embed = new EmbedBuilder()
+                            .setTitle("Eggium Music - Play Error")
+                            .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                            .setDescription(`There was an error playing your song. This is most commonly caused by an age restricted video.`)
+                            .setFooter({text: "Eggium - Tanner Approved"})
+                            .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
                     });
                 }
             } else if(link.includes("soundcloud.com")) {
@@ -229,6 +258,9 @@ async function getInfoFromURL(interaction, link, voice_channel){
                 //add song to queue
                 var date = new Date();
                 date.toLocaleString('en-US', { timeZone: 'America/New_York' });
+                console.log(yt_info[0])
+                console.log(yt_info)
+                console.log(yt_info[0].url)
                 con.query(`INSERT INTO MusicSystem (songLink, songName, songRequester, songStatus, serverID, voiceChannelID, dateAdded) VALUES ("${yt_info[0].url}", "${yt_info[0].title.replaceAll(`"`, "").replaceAll(`'`, "")}", ${String(interaction.member.user.id)}, "queued", ${String(voice_channel.guild.id)}, ${String(voice_channel.channelId)}, "${date.toISOString().slice(0, 19).replace('T', ' ')}")`);
                 const embed = new EmbedBuilder()
                     .setTitle("Eggium Music - Added to Queue")
@@ -244,8 +276,7 @@ async function getInfoFromURL(interaction, link, voice_channel){
 
 
 async function JoinChanNew(channel, link, name, volume, interaction, shouldInsertNew = true, shouldReuse = false){
-    var connection;
-    connection = joinVoiceChannel({
+    const connection = joinVoiceChannel({
         channelId: channel.channelId,
         guildId: channel.guild.id,
         adapterCreator: channel.guild.voiceAdapterCreator,
@@ -257,6 +288,20 @@ async function JoinChanNew(channel, link, name, volume, interaction, shouldInser
     player = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } })
     player.play(resource);
     connection.subscribe(player)
+    connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
+        try {
+            console.log("Disconnected Try.")
+            await Promise.race([
+                entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+                entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+            ]);
+        } catch (error) {
+            console.log("Disconnected Catch.")
+            connection.destroy();
+            con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE serverID = ${String(channel.guild.id)};`);
+            console.log(`killed current queue for ${String(channel.guild.id)}`)
+        }
+    });
     var date = new Date();
     date.toLocaleString('en-US', { timeZone: 'America/New_York' });
     if(shouldInsertNew === true) {
@@ -273,9 +318,15 @@ async function JoinChanNew(channel, link, name, volume, interaction, shouldInser
         console.log('idled')
         con.query(`SELECT * FROM MusicSystem WHERE songStatus = "queued" ORDER BY dateAdded ASC;`, function (err, result, fields) {
             if(result[0] === undefined || result[0] === null){
-                console.log('no songs in queue')
-                connection.destroy();
-                con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}";`);
+                console.log('no songs in queue');
+                try {
+                    connection.destroy();
+                    console.log('Successfully destroyed connection. From JoinChanNew')
+                    con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}";`);
+                    console.log(`killed current queue for ${String(channel.guild.id)} from JoinChanNew`)
+                } catch {
+                    console.log('Failed to destroy connection. From JoinChanNew (DID NOT KILL CURRENT QUEUE)')
+                }
             } else{
                 console.log('songs in queue')
                 con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE songStatus = "playing" AND serverID = ${String(channel.guild.id)} AND voiceChannelID = "${String(channel.channelId)}";`);
@@ -328,13 +379,16 @@ function JoinChannel(channel, track, volume, interaction) {
         connection.on(VoiceConnectionStatus.Ready, () => {console.log("ready"); player.play(resource);})
         connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
             try {
-                console.log("Disconnected.")
+                console.log("Disconnected Try.")
                 await Promise.race([
                     entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
                     entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
                 ]);
             } catch (error) {
+                console.log("Disconnected Catch.")
                 connection.destroy();
+                con.query(`UPDATE MusicSystem SET songStatus = "played" WHERE serverID = ${String(channel.guild.id)};`);
+                console.log(`killed current queue for ${String(channel.guild.id)}`)
             }
         });
         player.on('error', error => {
