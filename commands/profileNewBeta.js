@@ -2,6 +2,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder } = require("discord.js");
 var myModule = require('../bot.js');
 var con = myModule.con;
+var conGhost = myModule.conGhost;
+var tools = require('../globalTools.js');
   
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,6 +20,10 @@ module.exports = {
                 .addChoices({
                     name: 'Steam', 
                     value: 'steam',
+                },
+                {
+                  name: 'Ghost', 
+                  value: 'ghost',
                 })
                 .setRequired(true)),),
     async execute(interaction) {
@@ -50,6 +56,7 @@ module.exports = {
                 steamID = result[0]['CAST(steamID as CHAR)']
               })
               var steamName = result[0].steamName;
+              var eggiumLevel = tools.convertXP(result[0].xp).level;
               var dateObj = new Date(result[0].dateRegistered);
               con.query("SELECT * FROM ListeningHistory WHERE discordID = "+ user.id.toString() + " ORDER BY listenedTime DESC"+ ";", function (err, result, fields) {
                 if (err) throw err;
@@ -79,20 +86,31 @@ module.exports = {
                   //var dateRegistered = `${month}/${day}/${year}`;
                   var dateRegistered = `<t:${dateObj.getTime() / 1000}:D>`;
                   setTimeout(function() {
-                    const embed = new EmbedBuilder()
-                    .setTitle("Eggium Profile - " + discordName)
-                    .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
-                    .setDescription(
-                      "Steam ID: " + steamID +
-                      "\nSteam Name: " + steamName +
-                      "\nDate Registered: " + dateRegistered +
-                      "\nAchievements Obtained: " + achievementsAmount +
-                      "\nMost Listened To Song: " + mostListenedToSong
-                    );
-                  embed
-                    .setFooter({text: "Eggium - Tanner Approved"})
-                    .setTimestamp();
-                  interaction.reply({ embeds: [embed], ephemeral: true });
+                    var stringAssembly = "Steam ID: " + steamID + "\nSteam Name: " + steamName + "\nDate Registered: " + dateRegistered + "\nLevel: " + eggiumLevel + "\nAchievements Obtained: " + achievementsAmount + "\nMost Listened To Song: " + mostListenedToSong;
+                    conGhost.query("SELECT * FROM Linking WHERE EggiumID = " + user.id + ";", function (err, result, fields) {
+                      if (err) throw err;
+                      if(result[0] === undefined || result[0] === null) {
+                        const embed = new EmbedBuilder()
+                          .setTitle("Eggium Profile - " + discordName)
+                          .setURL(`https://persn.dev/eggium/profile/?user=${user.id}`)
+                          .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                          .setDescription(stringAssembly)
+                          .setFooter({text: "Eggium - Tanner Approved"})
+                          .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                      } else {
+                        stringAssembly = "Ghost ID: " + result[0].GhostID + "\n" + stringAssembly;
+
+                        const embed = new EmbedBuilder()
+                          .setTitle("Eggium Profile - " + discordName)
+                          .setURL(`https://persn.dev/eggium/profile/?user=${user.id}`)
+                          .setColor("#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+                          .setDescription(stringAssembly)
+                          .setFooter({text: "Eggium - Tanner Approved"})
+                          .setTimestamp();
+                        interaction.reply({ embeds: [embed], ephemeral: true });
+                      }
+                    });
                   }, 300);
                 });
               });
@@ -135,7 +153,7 @@ module.exports = {
 
         if(service === "steam") {
           const modalLinking = new ModalBuilder()
-          .setCustomId('profileLinking')
+          .setCustomId('profileLinkingSteam')
           .setTitle('Eggium Profile Linking');
           const steamIdentifierInput = new TextInputBuilder()
               .setCustomId('steamIdentifier')
@@ -146,6 +164,15 @@ module.exports = {
           const secondActionRow = new ActionRowBuilder().addComponents(steamIdentifierInput);
           modalLinking.addComponents(secondActionRow);
           interaction.showModal(modalLinking);
+        } else if(service === "ghost") {
+            const embed = new EmbedBuilder()
+              .setTitle(`Eggium Profile Linking - ${user.username}`)
+              .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+              .setDescription(`Visit your Eggium dashboard at https://eggium.net to link your Ghost account!`)
+              .setFooter({text: "Eggium - Tanner Approved"})
+              .setTimestamp();
+            //send embed
+            interaction.reply({ embeds: [embed], ephemeral: true });
         } else {
             const embed = new EmbedBuilder()
               .setTitle(`Eggium Profile Linking - ${user.username}`)
