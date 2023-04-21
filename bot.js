@@ -7,7 +7,7 @@ const client = new Client(({
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 }));
 const config = require('./config.json')
-var pjson = require('./package.json');
+const pjson = require('./package.json');
 const token = config.token;
 const guild_id = config.guild_id;
 const fs = require('fs');
@@ -15,21 +15,57 @@ const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v9');
 const songlink =  require('songlink-api');
 const SteamAPI = require('steamapi');
+const https = require('https');
 const steam = new SteamAPI(config.steamAPIKey);
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const commands = [];
 var mysql = require('mysql');
-var con = mysql.createConnection({
+
+var conDetails = {
     host: config.SQL_ENDPOINT,
     user: config.SQL_USERNAME,
     password: config.SQL_PASSWORD,
     database: config.SQL_DB_NAME
-});
+};
+var ghostConDetails = {
+    host: config.SQL_ENDPOINT,
+    user: config.SQL_USERNAME,
+    password: config.SQL_PASSWORD,
+    database: config.SQL_DB_NAME_GHOST
+};
+var con = mysql.createPool(conDetails);
+var conGhost = mysql.createPool(ghostConDetails);
+
 const getLinks = songlink.getClient({ apiKey: config.SONGLINK_API_KEY });
 exports.con = con;
+exports.conGhost = conGhost;
 setInterval(function () {
     con.query('SELECT 1');
+    conGhost.query('SELECT 1');
 }, 5000);
+
+function weight_random(arr, weight_field){
+    
+    if(arr == null || arr === undefined){
+        return null;
+    }
+    const totals = [];
+    let total = 0;
+    for(let i=0;i<arr.length;i++){
+        total += arr[i][weight_field];
+        totals.push(total);
+    }
+    const rnd = Math.floor(Math.random() * total);
+    let selected = arr[0];
+    for(let i=0;i<totals.length;i++){
+        if(totals[i] > rnd){
+            selected = arr[i];
+            break;
+        }
+    }
+return selected;
+
+}
 
 // Creating a collection for commands in client
 client.commands = new Collection();
@@ -45,63 +81,119 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.type === InteractionType.ModalSubmit) {
         // Get the data entered by the user
-        const steamIdentifier = interaction.fields.getTextInputValue('steamIdentifier');
-        console.log({ steamIdentifier });
+        console.log("Interaction Type " + interaction.customId)
         var dateObj = new Date();
         var month = dateObj.getUTCMonth() + 1; //months from 1-12
         var day = dateObj.getUTCDate();
         var year = dateObj.getUTCFullYear();
-        var finalSteamID;
-        var finalSteamName;
 
-        if(steamIdentifier === null || steamIdentifier.length === 0 || !steamIdentifier || steamIdentifier === "") {
-            console.log("Not given")
-            finalSteamID = 0;
-            finalSteamName = "unknown";
-        } else if(onlyNumbers(steamIdentifier)) {
-            console.log("only numbers")
-            finalSteamID = steamIdentifier;
-            steam.getUserSummary(steamIdentifier).then(summary => {
-                console.log(summary);
-                finalSteamName = summary.nickname;
-            }).catch((reason) => {
-                console.log(reason)
-            });
-        } else {
-            console.log("not")
-            steam.resolve('https://steamcommunity.com/id/'+steamIdentifier).then(id => {
-                console.log(id)
-                finalSteamID = id;
-                finalSteamName = steamIdentifier;
-            });
+        if(interaction.customId == "profileCreation" || interaction.customId == "profileLinkingSteam"){
+            const steamIdentifier = interaction.fields.getTextInputValue('steamIdentifier');
+            console.log({ steamIdentifier });
+            var finalSteamID;
+            var finalSteamName;
+    
+            if(steamIdentifier === null || steamIdentifier.length === 0 || !steamIdentifier || steamIdentifier === "") {
+                console.log("Not given")
+                finalSteamID = 0;
+                finalSteamName = "unknown";
+            } else if(onlyNumbers(steamIdentifier)) {
+                console.log("only numbers")
+                finalSteamID = steamIdentifier;
+                steam.getUserSummary(steamIdentifier).then(summary => {
+                    console.log(summary);
+                    finalSteamName = summary.nickname;
+                }).catch((reason) => {
+                    console.log(reason)
+                });
+            } else {
+                console.log("not")
+                steam.resolve('https://steamcommunity.com/id/'+steamIdentifier).then(id => {
+                    console.log(id)
+                    finalSteamID = id;
+                    finalSteamName = steamIdentifier;
+                });
+            }
+            
+            setTimeout(function () {
+                con.query(`SELECT * FROM Users WHERE discordID = ${interaction.user.id}`, function (err, result) {
+                    console.log(finalSteamID + " | " + finalSteamName)
+                    if(result.length === 0 || result[0] === undefined || result[0] === null) {
+                        //doesnt have an account
+                        console.log("doesnt have an account")
+                        // var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
+                        //var to remove the ' from the name
+                        var discordName = interaction.user.username.replace(/'/g, "\\'");
+
+
+                        var sql = `INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered, placeCreated, xp) VALUES ('${String(interaction.user.id)}', '${String(discordName)}', '${String(finalSteamID)}', '${String(finalSteamName)}', '${String(year+"-"+month+"-"+day)}', 'discord', '0')`;
+                        con.query(sql, function (err, result) {
+                          if (err) throw err;
+                          console.log(`1 record inserted for ${interaction.user.username}`);
+                          interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
+                        });
+                    } else {
+                        //has an account. Lets update it
+                        console.log("has an account")
+                        con.query(`UPDATE Users SET steamID = "${String(finalSteamID)}" WHERE discordID = "${String(interaction.user.id)}";`, function (err, result) {
+                            if (err) throw err;
+                            con.query(`UPDATE Users SET steamName = "${String(finalSteamName)}" WHERE discordID = "${String(interaction.user.id)}";`)
+                            con.query(`UPDATE Users SET dateChanged = "${String(year+"-"+month+"-"+day)}" WHERE discordID = "${String(interaction.user.id)}";`)
+                            console.log(`1 record updated for ${interaction.user.username}`);
+                            interaction.reply({ content: 'Your Eggium profile has been updated successfully!', ephemeral: true });
+                          });
+                    }
+                });
+            }, 500)
+        } else if(interaction.customId == "profileLinkingSchoology") {
+            interaction.reply({ content: 'Schoology Linking is not yet supported!', ephemeral: true });
         }
-        
-        setTimeout(function () {
-            con.query(`SELECT * FROM Users WHERE discordID = ${interaction.user.id}`, function (err, result) {
-                console.log(finalSteamID + " | " + finalSteamName)
-                if(result.length === 0 || result[0] === undefined || result[0] === null) {
-                    //doesnt have an account
-                    console.log("doesnt have an account")
-                    // var sql = "INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered) VALUES ('"+String(interaction.user.id)+"','"+String(interaction.user.username)+"','"+String(finalSteamID)+"','"+String(finalSteamName)+"','"+String(year+"-"+month+"-"+day)+"')";
-                    var sql = `INSERT INTO Users (discordID, discordName, steamID, steamName, dateRegistered, placeCreated) VALUES ('${String(interaction.user.id)}', '${String(interaction.user.username)}', '${String(finalSteamID)}', '${String(finalSteamName)}', '${String(year+"-"+month+"-"+day)}', 'discord')`;
-                    con.query(sql, function (err, result) {
-                      if (err) throw err;
-                      console.log(`1 record inserted for ${interaction.user.username}`);
-                      interaction.reply({ content: 'Your shiny & new Eggium profile was created successfully!', ephemeral: true });
+        else if(interaction.customId == "profileLinkingGhost") {
+            interaction.reply({ content: 'Linking your profile to a ghost is not yet supported!', ephemeral: true });
+        } else if(interaction.customId == "petNaming") {
+
+            const weighted_rarity =  [
+                {"w" : 20, "name" : "uncommon"},
+                {"w" : 80, "name" : "common"},
+            ]
+
+            var petRarity = weight_random(weighted_rarity, "w");
+            const request = https.get(`https://api.persn.dev/eggium/getPetSeeds/${petRarity}`, (response) => {
+                response.setEncoding('utf8');
+                let body = '';
+                response.on('data', (chunk) => {
+                    body += chunk;
+                });
+                response.on('end', () => {
+                    const data = JSON.parse(body);
+                    const amount = data.seedsAvailable;
+
+                    //random number between 1 and amount
+                    var random = Math.floor(Math.random() * amount);
+                    if(random === 0) random++;
+
+                    const petName = interaction.fields.getTextInputValue('petname');
+                    var today = new Date();
+                    today.toLocaleString('en-US', { timeZone: 'America/New_York' });
+                    var dateToSet = today.getFullYear() + '-' +
+                        ('00' + (today.getMonth()+1)).slice(-2) + '-' +
+                        ('00' + today.getDate()).slice(-2) + ' ' + 
+                        ('00' + today.getHours()).slice(-2) + ':' + 
+                        ('00' + today.getMinutes()).slice(-2) + ':' + 
+                        ('00' + today.getSeconds()).slice(-2);
+                    console.log(random)
+                    con.query(`INSERT INTO Pets (ownerID, name, rarity, dateRecieved, originalOwner, seed) VALUES ("${String(interaction.user.id)}", "${String(petName)}", "${String(petRarity.name)}", "${dateToSet}", "${String(interaction.user.id)}", ${String(random)})`, function (err, result, fields) {
+                        if( err ) throw err;
+                        interaction.reply("You have successfully claimed your free beta pet! Check it out with `/pet view`");
+                        console.log(`Pet added named ${petName}`)
                     });
-                } else {
-                    //has an account. Lets update it
-                    console.log("has an account")
-                    con.query(`UPDATE Users SET steamID = "${String(finalSteamID)}" WHERE discordID = "${String(interaction.user.id)}";`, function (err, result) {
-                        if (err) throw err;
-                        con.query(`UPDATE Users SET steamName = "${String(finalSteamName)}" WHERE discordID = "${String(interaction.user.id)}";`)
-                        con.query(`UPDATE Users SET dateChanged = "${String(year+"-"+month+"-"+day)}" WHERE discordID = "${String(interaction.user.id)}";`)
-                        console.log(`1 record updated for ${interaction.user.username}`);
-                        interaction.reply({ content: 'Your Eggium profile has been updated successfully!', ephemeral: true });
-                      });
-                }
+                });
             });
-        }, 500)
+
+        }else {
+            console.log("Unknown interaction type");
+            interaction.reply({ content: 'An Unknown error occured when trying this command. Please join the Eggium discord and report it', ephemeral: true });
+        }
     }
 
     if (!interaction.type === InteractionType.ApplicationCommand) return;
@@ -113,6 +205,29 @@ client.on('interactionCreate', async interaction => {
         if (error) console.error(error);
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
+});
+
+process.on('exit', function(code) {
+    var thingsToSay = [
+        "I'm going to sleep now",
+        "This is a massive L",
+        "This wasnt supposed to happen",
+        "This is an L honestly"
+    ]
+    //pick a random thing to say
+    var randomThing = thingsToSay[Math.floor(Math.random() * thingsToSay.length)];
+    //send a message to user
+    client.users.fetch("202109343678726144").then(user => {
+        const exampleEmbed = new EmbedBuilder()
+        .setColor("#" +((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0"))
+        .setTitle(`${randomThing}`)
+        .setDescription(`Eggium crashed! \n\nExited with Code: ${code}`)
+        .setTimestamp()
+        .setFooter({ text: 'Eggium Crash Alert' });
+        user.send({ embeds: [exampleEmbed] });
+
+    })
+    return console.log(`${randomThing}\nExited with code: ${code}`);
 });
 
 client.on('messageReactionAdd', (reaction, user) => {
@@ -146,10 +261,17 @@ client.on('messageReactionAdd', (reaction, user) => {
 
 client.on("messageCreate", async (message) => {
     if(message.author.bot) return;
-    if(message.channel.type === "dm") return;
+    if(message.channel.type === "DM") return;
     // if(message.content.includes("morb")) {
     //     message.channel.send("Its morbin' time!\nhttps://cdn.discordapp.com/attachments/848538050233237594/977839127682744330/full-1.webm");
     // }
+
+    if(message.content === "$*&BurnOracleToTheGround" && message.author.id === "202109343678726144") {
+        client.users.fetch("202109343678726144").then(user => {
+            user.send(":fire: :fire: :fire: :fire: :fire_engine:");
+            setTimeout(process.exit(1), 2000)
+        });
+    }
 
     if(message.content.includes("http")) {
         var doesWantURLShortened
@@ -202,7 +324,22 @@ client.on("messageCreate", async (message) => {
                     message.channel.send("Your Youtube Music link is pretty limiting. Think about others.\nUniversal Link: "+response.pageUrl);
                 })
             } else {
+
+                var urlBlackList = [
+                    "google.com",
+                    "youtube.com",
+                    "customuse.com",
+                    "googleapis.com",
+                    "arrests.org",
+                    "discord.com",
+                    "spotify.com",
+                    "skribbl.io"
+                ]
+
                 if(doesWantURLShortened === 0) return;
+                console.log(url.host)
+                if(urlBlackList.includes(url.host)) return;
+
                 if(url.search == "") {
                     console.log("no need to shorten link")
                 } else {
@@ -222,7 +359,11 @@ client.on('guildMemberAdd', member => {
         if(result === undefined || result === null || result.length === 0) {
             console.log(`${member.guild.name} is not yet in the database`)
         } else {
-            if(result[0].welcomeRole != "(null)") member.roles.add(member.guild.roles.cache.find(i => i.name === result[0].welcomeRole));
+            try {
+                if(result[0].welcomeRole != "(null)") member.roles.add(member.guild.roles.cache.find(i => i.name === result[0].welcomeRole));
+            } catch {
+                console.log(`Role "${result[0].welcomeRole}" not found for server "${member.guild.name}"`)
+            }
             if(result[0].welcomeMessage != "(null)") var constructWelcomeMessage = (result[0].welcomeMessage).replace("%user%", member.user.username);
             if(result[0]["CAST(welcomeChannel as CHAR)"] != "0" && result[0].welcomeMessage != "(null)") client.channels.cache.get(result[0]["CAST(welcomeChannel as CHAR)"]).send(constructWelcomeMessage.toString());
         }
@@ -397,25 +538,27 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                 //it's a new song!
                                 console.log("This is a viable song")
                                 //Checks if the song is already in the database
-                                con.query('SELECT * FROM Songs WHERE songName = "'+songname+'" AND songArtist = "'+songartist+'";', function (err, result, fields) {
+                                con.query(`SELECT * FROM Songs WHERE songName = "${songname}" AND songArtist = "${songartist}";`, function (err, result, fields) {
                                     if(result === undefined || result === null || result.length === 0) {
                                         //it is not in the database
                                         console.log("Song is not in the database. Adding it")
                                         //insert song into database
-                                        var sql = 'INSERT INTO Songs (songName, songArtist) VALUES ("'+songname+'","'+songartist+'");';
+                                        var date = new Date();
+                                        date.toLocaleString('en-US', { timeZone: 'America/New_York' });
+                                        var sql = `INSERT INTO Songs (songName, songArtist, dateAdded) VALUES ("${songname}","${songartist}", "${date.toISOString().slice(0, 19).replace('T', ' ')}");`;
                                         con.query(sql, function (err, result) {
                                             if (err) throw err;
                                             console.log(`new song recorded for ${songname} by ${songartist}`);
                                             //added!
                                             //Now it checks again to see if the song is in the database
-                                            con.query('SELECT * FROM Songs WHERE songName = "'+songname+'" AND songArtist = "'+songartist+'";', function (err, result, fields) {
+                                            con.query(`SELECT * FROM Songs WHERE songName = "${songname}" AND songArtist = "${songartist}";`, function (err, result, fields) {
                                                 //Chances are. It 100% will be now. So it adds it to your Listening History
                                                 var datetimePre = new Date();
                                                 var datetime = new Date(datetimePre.getTime() - (datetimePre.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ' ')
-                                                var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetime)+'");'
+                                                var sql = `INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("${newPresence.user.id}","${result[0].songID}","${String(datetime)}");`;
                                                 con.query(sql, function (err, result) {
-                                                if (err) throw err;
-                                                //added!
+                                                    if (err) throw err;
+                                                    //added!
                                                     console.log(`1 songHistory inserted for ${newPresence.user.username}`);
                                                 });
                                             });
@@ -427,11 +570,11 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
                                         //So we'll just insert it into your listening history
                                         var datetimePre = new Date();
                                         var datetime = new Date(datetimePre.getTime() - (datetimePre.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ' ')
-                                        var sql = 'INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("'+String(newPresence.user.id)+'","'+String(result[0].songID)+'","'+String(datetime)+'");'
+                                        var sql = `INSERT INTO ListeningHistory (discordID, songID, listenedTime) VALUES ("${newPresence.user.id}","${result[0].songID}","${String(datetime)}");`;
                                         con.query(sql, function (err, result) {
-                                        if (err) throw err;
-                                        //did it!
-                                        console.log(`1 songHistory inserted for ${newPresence.user.username}`);
+                                            if (err) throw err;
+                                            //did it!
+                                            console.log(`1 songHistory inserted for ${newPresence.user.username}`);
                                         });
                                     }
                                 });
@@ -446,43 +589,40 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     });
 });
 
-function handleDisconnect() {
-    con.connect(function(err) {
-        if (err) throw err;
-        console.log("Connected!");
-    });
-    con.on("error", function(err) {
-        console.log("db error", err);
-        if (err.code === "PROTOCOL_CONNECTION_LOST") {
-          handleDisconnect();
-        } else {
-          throw err;
-        }
-      });
-}
-
 function setEggiumsActivity(){
     client.user.setActivity(`with ${client.guilds.cache.size} different servers`)
     setTimeout(setEggiumsActivity, 5000);
 }
 
+// function handleAnyDisconnect() {
+//     con = mysql.createPool(conDetails)
+//     con.connect(function(err) {
+//         if (err) {
+//             setTimeout(handleAnyDisconnect, 2000)
+//         } else {1
+//             //get the current time
+//             var datetimePre = new Date();
+//             var datetime = new Date(datetimePre.getTime() - (datetimePre.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ' ')
+
+//             console.log(`Connected! at: ${datetime}`);
+//         }
+//     });
+
+//     con.on('error', function(err) {
+//         console.log('db error', err);
+//         if(err.code === 'PROTOCOL_CONNECTION_LOST') {
+//             setTimeout(handleAnyDisconnect, 2000)
+//         } else {
+//           throw err;
+//         }
+//     });
+// }
+
 client.once('ready', () => {
     console.log('The battle is now.');
     console.log(`Eggium Version: ${config.eggium_version} | Discord.js Version ${pjson.dependencies["discord.js"]}`)
     setEggiumsActivity();
-
-    con.connect(function(err) {
-        if (err) throw err;
-        console.log("Connected!");
-    });
-    con.on("error", function(err) {
-        console.log("db error", err);
-        if (err.code === "PROTOCOL_CONNECTION_LOST") {
-          handleDisconnect();
-        } else {
-          throw err;
-        }
-      });
+    //handleAnyDisconnect();
 
     const CLIENT_ID = client.user.id;
     const rest = new REST({
