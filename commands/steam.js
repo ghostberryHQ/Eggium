@@ -24,7 +24,7 @@ module.exports = {
         var user = interaction.options.getUser("username");
         if(dataType == 'recentlyplayed') {
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
-                if(result === undefined || result === null || result.length === 0) {
+                if(result === undefined || result === null || result.length === 0 || result[0]["CAST(steamID as CHAR)"] === 0 || result[0]["CAST(steamID as CHAR)"] === "0") {
                     const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
@@ -67,7 +67,7 @@ module.exports = {
             })
         } else if (dataType == 'userinfo') {
             con.query("SELECT CAST(steamID as CHAR) FROM Users WHERE discordID = " + user.id + ";", function (err, result, fields) {
-                if(result === undefined || result === null || result.length === 0) {
+                if(result === undefined || result === null || result.length === 0 || result[0]["CAST(steamID as CHAR)"] === 0 || result[0]["CAST(steamID as CHAR)"] === "0") {
                     const embed = new EmbedBuilder()
                     .setTitle('Recently Played for - ' + user.username)
                     .setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0'))
