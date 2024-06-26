@@ -1,0 +1,32 @@
+{
+  "name": "eggium",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.9.0",
+    "@discordjs/voice": "^0.17.0",
+    "@distube/deezer": "^2.0.1",
+    "@distube/direct-link": "^1.0.1",
+    "@distube/file": "^1.0.1",
+    "@distube/soundcloud": "^2.0.1",
+    "@distube/spotify": "^2.0.2",
+    "@distube/youtube": "^1.0.2",
+    "discord.js": "^14.15.3",
+    "distube": "5.0.1",
+    "sodium-native": "^4.1.1",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "discord.js": "^14.15.2",
+    "eslint": "^8.57.0",
+    "eslint-config-distube": "^1.7.0",
+    "prettier": "^3.3.0",
+    "tsup": "^8.1.0",
+    "typescript": "^5.4.5"
+  }
+}
