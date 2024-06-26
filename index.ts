@@ -22,6 +22,14 @@ import DeezerPlugin from "@distube/deezer";
 import { DirectLinkPlugin } from "@distube/direct-link";
 import * as dotenv from 'dotenv'
 dotenv.config()
+var mongoUtil = require( './utils/mongoUtil' );
+
+mongoUtil.connectToServer( function( err: any, client: any ) {
+  if (err) console.log(err);
+  // start the rest of your app here
+});
+
+
 
 export const followUp = async (
   interaction: ChatInputCommandInteraction,
