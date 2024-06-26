@@ -1,5 +1,5 @@
 import { Command } from "..";
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder, Colors } from "discord.js";
 import type { ChatInputCommandInteraction, ColorResolvable } from "discord.js";
 
 export default class StopCommand extends Command {
@@ -16,7 +16,7 @@ export default class StopCommand extends Command {
     } catch (e) {
       console.error(e);
       interaction.reply({
-        embeds: [new EmbedBuilder().setColor('#'+(Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, '0') as ColorResolvable).setTitle("Eggium").setDescription(`Error: \`${e}\``)],
+        embeds: [new EmbedBuilder().setColor(Colors.Red).setTitle("Eggium").setDescription(`Error: \`${e}\``)],
       });
     }
   }

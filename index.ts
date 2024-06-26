@@ -20,6 +20,8 @@ import type {
 import SoundCloudPlugin from "@distube/soundcloud";
 import DeezerPlugin from "@distube/deezer";
 import { DirectLinkPlugin } from "@distube/direct-link";
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 export const followUp = async (
   interaction: ChatInputCommandInteraction,
@@ -109,11 +111,10 @@ const client = new DisTubeClient({
   ],
 });
 
-client.login("TOKEN");
+client.login(process.env.DISCORD_TOKEN);
 
 export interface Metadata {
   interaction: ChatInputCommandInteraction<"cached">;
-  // Example for strict typing
 }
 
 export abstract class Command {
