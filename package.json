@@ -15,6 +15,7 @@
     "@distube/soundcloud": "^2.0.1",
     "@distube/spotify": "^2.0.2",
     "@distube/youtube": "^1.0.2",
+    "@types/node-fetch": "^2.6.11",
     "@types/qrcode": "^1.5.5",
     "discord.js": "^14.15.3",
     "distube": "5.0.1",
