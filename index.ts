@@ -48,10 +48,10 @@ class DisTubeClient extends Client<true> {
   distube = new DisTube(this, {
     plugins: [
       new YouTubePlugin(),
-      new SoundCloudPlugin(),
-      new SpotifyPlugin(),
+      new SoundCloudPlugin(), //Doesnt Work
+      new SpotifyPlugin(), //Doesnt Work
       new DeezerPlugin(),
-      new DirectLinkPlugin(),
+      new DirectLinkPlugin(), //Works
       new FilePlugin(),
     ],
     emitAddListWhenCreatingQueue: true,
