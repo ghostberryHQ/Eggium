@@ -3,12 +3,9 @@ import { EmbedBuilder } from "discord.js";
 import { DisTubeEvent, type Metadata } from "../..";
 import type { Queue, Song as Song2 } from "distube";
 import type { ColorResolvable } from "discord.js";
-// import Song from '../../models/song.model';
 import Song, { type ISong } from '../../models/song.model';
 var mongoUtil = require( '../../utils/mongoUtil' );
 var db = mongoUtil.getDb();
-
-console.log(db)
 
 
 

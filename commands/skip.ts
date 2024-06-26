@@ -1,6 +1,9 @@
 import { Command } from "..";
 import { EmbedBuilder, SlashCommandBuilder, Colors } from "discord.js";
 import type { ChatInputCommandInteraction, ColorResolvable } from "discord.js";
+import Song, { type ISong } from '../models/song.model';
+var mongoUtil = require( '../utils/mongoUtil' );
+var db = mongoUtil.getDb();
 
 export default class SkipCommand extends Command {
   readonly name = "forceskip";
@@ -13,7 +16,17 @@ export default class SkipCommand extends Command {
       return;
     }
 
+    const currentSong = queue.songs[0];
+
     try {
+
+      Song.findOneAndUpdate({
+        title: currentSong.name,
+        server: interaction.guildId,
+        status: "playing",
+      }, { status: "played" }).exec().then(() => {
+        console.log(`${currentSong.name} updated to played in database because it was skipped`);
+      });
 
       if(queue.songs.length === 1){
         //no song next so just stop
@@ -28,6 +41,7 @@ export default class SkipCommand extends Command {
         });
       } else {
         const song = await this.distube.skip(interaction);
+
         interaction.reply({
           embeds: [
             new EmbedBuilder()
